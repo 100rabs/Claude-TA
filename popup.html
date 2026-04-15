@@ -3,289 +3,262 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RecruiterKeys</title>
+  <title>Candidate Scorer — Settings</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
+    :root {
+      --primary: #0a66c2;
+      --primary-hover: #004182;
+      --bg: #ffffff;
+      --bg-alt: #f3f2ef;
+      --text: #191919;
+      --text-sec: #666666;
+      --border: #e0e0e0;
+      --green: #057642;
+      --red: #cc1016;
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      width: 380px;
-      min-height: 480px;
-      max-height: 560px;
-      background: #1c1c1e;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 440px; min-height: 500px; color: var(--text); background: var(--bg);
     }
 
-    .popup-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
+    .header { background: var(--primary); color: white; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 15px; font-weight: 600; }
+    .header-actions { display: flex; gap: 8px; }
+    .header-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+    .header-btn:hover { background: rgba(255,255,255,0.35); }
 
-    .popup-logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    /* Profile Selector Bar */
+    .profile-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px; background: var(--bg-alt);
+      border-bottom: 1px solid var(--border);
     }
-
-    .popup-logo-icon {
-      width: 28px;
-      height: 28px;
-      background: linear-gradient(135deg, #7c5cff, #a78bfa);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+    .profile-bar label { font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .profile-select {
+      flex: 1; padding: 6px 8px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 12px; background: white; cursor: pointer;
     }
-
-    .popup-logo-text {
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-
-    .popup-settings-btn {
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      background: rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.6);
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .popup-settings-btn:hover {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-    }
-
-    /* Active Role Card */
-    .role-card {
-      margin: 12px 16px;
-      padding: 12px;
-      border-radius: 10px;
-      background: rgba(124, 92, 255, 0.08);
-      border: 1px solid rgba(124, 92, 255, 0.15);
-    }
-
-    .role-card-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.35);
-      margin-bottom: 4px;
-    }
-
-    .role-card-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .role-card-company {
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
-      margin-top: 2px;
-    }
-
-    .role-card-empty {
-      font-size: 12px;
-      color: rgba(255,255,255,0.4);
-      text-align: center;
-      padding: 8px;
-    }
-
-    .role-card-empty a {
-      color: #a78bfa;
-      text-decoration: none;
-    }
-
-    /* Quick Actions */
-    .section-label {
-      padding: 10px 16px 4px;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: rgba(255,255,255,0.3);
-      font-weight: 600;
-    }
-
-    .quick-actions {
-      padding: 4px 12px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .quick-action-btn {
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
+    .profile-btn {
+      padding: 5px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 11px; cursor: pointer; background: white; white-space: nowrap;
       transition: all 0.15s;
-      text-align: left;
-      font-family: inherit;
     }
+    .profile-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .profile-btn.danger { border-color: var(--red); color: var(--red); }
+    .profile-btn.danger:hover { background: var(--red); color: white; }
 
-    .quick-action-btn:hover {
-      background: rgba(124, 92, 255, 0.1);
-      border-color: rgba(124, 92, 255, 0.2);
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 2px solid var(--border); background: var(--bg-alt); }
+    .tab {
+      flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: none; background: none; color: var(--text-sec);
+      border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s;
     }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    .quick-action-icon {
-      font-size: 16px;
-      margin-bottom: 4px;
-      display: block;
-    }
+    .tab-panel { display: none; padding: 16px 18px; }
+    .tab-panel.active { display: block; }
 
-    .quick-action-label {
-      font-size: 11px;
-      color: rgba(255,255,255,0.5);
+    /* Form */
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .field .hint { font-size: 11px; color: var(--text-sec); margin-bottom: 4px; }
+    input[type="text"], input[type="number"], select {
+      width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+      border-radius: var(--radius); font-size: 13px; outline: none;
     }
+    input:focus, select:focus { border-color: var(--primary); }
 
-    /* Recent Messages */
-    .recent-list {
-      padding: 4px 12px;
-      max-height: 200px;
-      overflow-y: auto;
+    .tag-input-container {
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 4px 6px; display: flex; flex-wrap: wrap; gap: 4px;
+      min-height: 36px; cursor: text;
     }
+    .tag-input-container:focus-within { border-color: var(--primary); }
+    .tag-input-container input { border: none; outline: none; padding: 4px; font-size: 12px; flex: 1; min-width: 80px; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 2px 8px; font-size: 11px; }
+    .tag-remove { background: none; border: none; cursor: pointer; color: var(--text-sec); font-size: 14px; padding: 0; line-height: 1; }
+    .tag-remove:hover { color: var(--red); }
 
-    .recent-item {
-      display: flex;
-      align-items: center;
-      padding: 8px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      gap: 10px;
-      transition: background 0.1s;
-    }
-    .recent-item:hover {
-      background: rgba(255,255,255,0.04);
-    }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .checkbox-item { display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; }
+    .checkbox-item input[type="checkbox"] { width: auto; }
 
-    .recent-icon {
-      font-size: 14px;
-      flex-shrink: 0;
-    }
+    /* Weights */
+    .weight-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .weight-label { font-size: 12px; min-width: 110px; }
+    .weight-slider { flex: 1; accent-color: var(--primary); }
+    .weight-value { font-size: 12px; font-weight: 600; min-width: 28px; text-align: right; }
+    .weight-total { font-size: 12px; font-weight: 600; text-align: right; padding-top: 8px; border-top: 1px solid var(--border); }
+    .weight-total.invalid { color: var(--red); }
 
-    .recent-content {
-      flex: 1;
-      min-width: 0;
+    .btn-primary {
+      width: 100%; padding: 10px; background: var(--primary); color: white;
+      border: none; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
     }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: none; border: 1px solid var(--red); color: var(--red); padding: 6px 12px; border-radius: var(--radius); font-size: 12px; cursor: pointer; }
+    .btn-danger:hover { background: var(--red); color: white; }
 
-    .recent-label {
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .status { text-align: center; font-size: 12px; padding: 8px; border-radius: var(--radius); margin-top: 10px; display: none; }
+    .status.success { display: block; background: #e8f5e9; color: var(--green); }
+    .status.error { display: block; background: #fce4ec; color: var(--red); }
 
-    .recent-meta {
-      font-size: 10px;
-      color: rgba(255,255,255,0.3);
-      margin-top: 1px;
-    }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .stat-card { background: var(--bg-alt); border-radius: var(--radius); padding: 12px; text-align: center; }
+    .stat-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 11px; color: var(--text-sec); margin-top: 2px; }
 
-    .recent-time {
-      font-size: 10px;
-      color: rgba(255,255,255,0.25);
-      flex-shrink: 0;
-    }
+    .scrollable { max-height: 420px; overflow-y: auto; }
 
-    /* Open Palette Button */
-    .open-palette-btn {
-      margin: 12px 16px;
-      padding: 12px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #7c5cff, #6b4ee6);
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      width: calc(100% - 32px);
-      font-family: inherit;
-      transition: opacity 0.15s;
-    }
-    .open-palette-btn:hover {
-      opacity: 0.9;
-    }
-
-    .popup-footer {
-      padding: 10px 16px;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      font-size: 10px;
-      color: rgba(255,255,255,0.2);
-      text-align: center;
-    }
-
-    .popup-footer kbd {
-      padding: 2px 6px;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.08);
-      font-family: inherit;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
+    /* Profile name row */
+    .profile-name-row { display: flex; gap: 8px; margin-bottom: 14px; }
+    .profile-name-row input { flex: 1; }
   </style>
 </head>
 <body>
-  <div class="popup-header">
-    <div class="popup-logo">
-      <div class="popup-logo-icon">⌨️</div>
-      <span class="popup-logo-text">RecruiterKeys</span>
-    </div>
-    <button class="popup-settings-btn" id="openSettings">⚙ Settings</button>
-  </div>
-
-  <div class="role-card" id="roleCard">
-    <div class="role-card-label">Active Role</div>
-    <div class="role-card-title" id="roleTitle">No role selected</div>
-    <div class="role-card-company" id="roleCompany"></div>
-  </div>
-
-  <div class="section-label">Quick Actions</div>
-  <div class="quick-actions">
-    <button class="quick-action-btn" data-command="/outreach">
-      <span class="quick-action-icon">🔍</span>
-      Cold Outreach
-      <span class="quick-action-label">/outreach</span>
-    </button>
-    <button class="quick-action-btn" data-command="/follow1">
-      <span class="quick-action-icon">📨</span>
-      Follow Up
-      <span class="quick-action-label">/follow1</span>
-    </button>
-    <button class="quick-action-btn" data-command="/interview-prep">
-      <span class="quick-action-icon">🎤</span>
-      Interview Prep
-      <span class="quick-action-label">/interview-prep</span>
-    </button>
-    <button class="quick-action-btn" data-command="/offer-verbal">
-      <span class="quick-action-icon">🎉</span>
-      Make Offer
-      <span class="quick-action-label">/offer-verbal</span>
-    </button>
-  </div>
-
-  <div class="section-label">Recent Messages</div>
-  <div class="recent-list" id="recentList">
-    <div class="recent-item" style="justify-content:center; color: rgba(255,255,255,0.3); font-size: 12px; padding: 20px;">
-      No recent messages yet
+  <div class="header">
+    <h1>Candidate Scorer</h1>
+    <div class="header-actions">
+      <button class="header-btn" id="rescore-btn">Re-score</button>
     </div>
   </div>
 
-  <button class="open-palette-btn" id="openPalette">Open Command Palette</button>
+  <!-- Profile Selector -->
+  <div class="profile-bar">
+    <label>Role Profile:</label>
+    <select class="profile-select" id="profile-select"></select>
+    <button class="profile-btn" id="new-profile-btn">+ New</button>
+    <button class="profile-btn danger" id="delete-profile-btn">Del</button>
+  </div>
 
-  <div class="popup-footer">
-    Type <kbd>/</kbd> in any text field or press <kbd>Alt+Shift+R</kbd>
+  <div class="tabs">
+    <button class="tab active" data-tab="role">Role Profile</button>
+    <button class="tab" data-tab="weights">Weights</button>
+    <button class="tab" data-tab="data">Data</button>
+  </div>
+
+  <!-- Role Profile Tab -->
+  <div class="tab-panel active scrollable" id="panel-role">
+    <div class="field">
+      <label>Profile Name</label>
+      <div class="hint">A label for this role profile (e.g. "Sr. SWE - Backend")</div>
+      <input type="text" id="profileName" placeholder="e.g. Sr. Software Engineer - Backend">
+    </div>
+
+    <div class="field">
+      <label>Target Job Title</label>
+      <input type="text" id="targetTitle" placeholder="e.g. Senior Software Engineer">
+    </div>
+
+    <div class="field">
+      <label>Seniority Level</label>
+      <select id="seniorityLevel">
+        <option value="IC">Individual Contributor</option>
+        <option value="Lead">Lead / Senior</option>
+        <option value="Manager">Manager</option>
+        <option value="Director">Director</option>
+        <option value="VP">VP / Executive</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Keywords (must-have)</label>
+      <div class="hint">Searched across entire profile: headline, about, job titles, descriptions, education, skills, certs. Press Enter or comma to add.</div>
+      <div class="tag-input-container" id="keywords-container">
+        <input type="text" id="keywords-input" placeholder="e.g. Python, machine learning, AWS...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Bonus Keywords (nice-to-have)</label>
+      <div class="hint">Extra credit if found anywhere in the profile</div>
+      <div class="tag-input-container" id="bonusKeywords-container">
+        <input type="text" id="bonusKeywords-input" placeholder="e.g. startup experience, public speaking...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Minimum Years of Experience</label>
+      <input type="number" id="minYearsExperience" min="0" max="30" value="0">
+    </div>
+
+    <div class="field">
+      <label>Preferred Company Types</label>
+      <div class="checkbox-group" id="companyTypes">
+        <label class="checkbox-item"><input type="checkbox" value="FAANG"> FAANG</label>
+        <label class="checkbox-item"><input type="checkbox" value="BIG_TECH"> Big Tech</label>
+        <label class="checkbox-item"><input type="checkbox" value="FORTUNE500"> Fortune 500</label>
+        <label class="checkbox-item"><input type="checkbox" value="CONSULTANCY"> Consultancy</label>
+        <label class="checkbox-item"><input type="checkbox" value="Startup"> Startup</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Required Certifications</label>
+      <div class="tag-input-container" id="requiredCerts-container">
+        <input type="text" id="requiredCerts-input" placeholder="e.g. AWS, PMP...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Required Education Level</label>
+      <select id="requiredEducationLevel">
+        <option value="none">No requirement</option>
+        <option value="bachelors">Bachelor's Degree</option>
+        <option value="masters">Master's Degree</option>
+        <option value="phd">Ph.D.</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" id="save-role">Save Role Profile</button>
+    <div class="status" id="role-status"></div>
+  </div>
+
+  <!-- Weights Tab -->
+  <div class="tab-panel" id="panel-weights">
+    <p style="font-size:12px;color:var(--text-sec);margin-bottom:12px;">
+      Adjust how much each category contributes to the overall score. Total should equal 100%.
+    </p>
+    <div id="weights-list"></div>
+    <div class="weight-total" id="weight-total">Total: 100%</div>
+    <br>
+    <button class="btn-primary" id="save-weights">Save Weights</button>
+    <div class="status" id="weights-status"></div>
+  </div>
+
+  <!-- Data Tab -->
+  <div class="tab-panel" id="panel-data">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-scored">0</div>
+        <div class="stat-label">Candidates Scored</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-pinned">0</div>
+        <div class="stat-label">Pinned</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-profiles">0</div>
+        <div class="stat-label">Role Profiles</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Settings</label>
+      <label class="checkbox-item" style="margin-top:6px">
+        <input type="checkbox" id="autoScore" checked> Auto-score profiles on visit
+      </label>
+      <label class="checkbox-item" style="margin-top:6px">
+        <input type="checkbox" id="darkTheme"> Dark theme overlay
+      </label>
+    </div>
+    <br>
+    <button class="btn-danger" id="clear-data">Clear All Candidate Data</button>
+    <div class="status" id="data-status"></div>
   </div>
 
   <script src="popup.js"></script>
