@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recruiter X-Ray Sourcing Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f8fafc;--card:#fff;--border:#e2e8f0;--text:#0f172a;--text2:#475569;--text3:#94a3b8;--blue:#2563eb;--blue-light:#eff6ff;--green:#059669;--green-light:#d1fae5;--yellow:#d97706;--yellow-light:#fef3c7;--red:#dc2626;--red-light:#fee2e2;--purple:#7c3aed;--purple-light:#ede9fe;--radius:12px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+button{cursor:pointer;font:inherit;border:none;background:none}
+input,textarea,select{font:inherit;border:1px solid var(--border);border-radius:8px;padding:8px 12px;outline:none;transition:border .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--blue)}
+.app-header{background:var(--card);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.app-header .subtitle{font-size:12px;color:var(--text3);margin-top:2px}
+.btn{padding:8px 16px;border-radius:8px;font-weight:600;font-size:13px;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:#1d4ed8}
+.btn-secondary{background:var(--bg);color:var(--text2);border:1px solid var(--border)}.btn-secondary:hover{background:#f1f5f9}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#047857}
+.btn-danger{background:var(--red-light);color:var(--red)}.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:5px 10px;font-size:12px}
+.layout{display:flex;min-height:calc(100vh - 65px)}
+.sidebar{width:320px;border-right:1px solid var(--border);background:var(--card);padding:20px;overflow-y:auto;flex-shrink:0}
+.main{flex:1;padding:24px 32px;overflow-y:auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.card+.card{margin-top:16px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-new{background:var(--blue-light);color:var(--blue)}
+.badge-review{background:var(--yellow-light);color:var(--yellow)}
+.badge-closed{background:#f1f5f9;color:var(--text3)}
+.badge-narrow{background:var(--red-light);color:var(--red)}
+.badge-medium{background:var(--yellow-light);color:var(--yellow)}
+.badge-broad{background:var(--green-light);color:var(--green)}
+.badge-adjacent{background:var(--blue-light);color:var(--blue)}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+.stat-box{text-align:center;padding:14px;border-radius:10px}
+.stat-box .num{font-size:26px;font-weight:700}
+.stat-box .lbl{font-size:11px;margin-top:2px}
+.tabs{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:10px;margin-bottom:16px}
+.tab-btn{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:13px;font-weight:500;color:var(--text2);transition:all .2s}
+.tab-btn.active{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+.tab-btn:hover:not(.active){background:#e2e8f0}
+.role-card{padding:14px;border:2px solid var(--border);border-radius:var(--radius);margin-bottom:10px;cursor:pointer;transition:all .2s}
+.role-card:hover{border-color:#93c5fd;background:var(--blue-light)}
+.role-card.active{border-color:var(--blue);background:var(--blue-light)}
+.role-card h3{font-size:14px;font-weight:600;margin-bottom:4px}
+.role-card .meta{font-size:12px;color:var(--text3)}
+.role-card .mini-stats{display:flex;gap:12px;margin-top:8px;font-size:12px}
+.role-card .mini-stats span{font-weight:600}
+.score-badge{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0}
+.score-high{background:var(--green-light);color:var(--green)}
+.score-med{background:var(--yellow-light);color:var(--yellow)}
+.score-low{background:var(--red-light);color:var(--red)}
+.cand-row{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;transition:all .2s}
+.cand-row:hover{border-color:#93c5fd;background:#fafbff}
+.cand-row .info{flex:1;min-width:0}
+.cand-row .info h4{font-size:14px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:8px}
+.cand-row .info h4 a{font-size:11px;color:var(--blue);text-decoration:none;font-weight:500}
+.cand-row .info h4 a:hover{text-decoration:underline}
+.cand-row .info .title{font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cand-row .info .loc{font-size:11px;color:var(--text3)}
+.cand-detail{padding:12px 14px;background:#f8fafc;border-top:1px solid var(--border);margin:-8px -14px -14px;margin-top:10px;border-radius:0 0 10px 10px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-row .bar-label{font-size:11px;color:var(--text3);width:80px;flex-shrink:0}
+.bar-row .bar-bg{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.bar-row .bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.bar-row .bar-val{font-size:11px;font-weight:600;width:28px;text-align:right}
+.search-str{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;background:var(--card)}
+.search-str code{display:block;background:#f8fafc;padding:8px 10px;border-radius:6px;font-size:12px;word-break:break-all;margin-top:8px;border:1px solid var(--border);color:var(--text2)}
+.skill-tag{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;margin:3px 4px 3px 0;font-weight:500}
+.must-tag{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
+.nice-tag{background:var(--blue-light);color:var(--blue);border:1px solid #93c5fd}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--card);border-radius:16px;padding:28px;width:640px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);transform:translateY(20px);transition:transform .2s}
+.modal-overlay.show .modal{transform:translateY(0)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.form-group input,.form-group textarea,.form-group select{width:100%}
+.form-group textarea{resize:vertical;min-height:120px}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:#fafbff}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--blue);background:var(--blue-light)}
+.upload-zone svg{width:40px;height:40px;margin:0 auto 12px;color:var(--text3)}
+.upload-zone .or{font-size:12px;color:var(--text3);margin:12px 0}
+.progress-bar{width:100%;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin-top:8px}
+.progress-bar .fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s}
+.toggle-arrow{transition:transform .2s;cursor:pointer}
+.toggle-arrow.open{transform:rotate(180deg)}
+.spinner{width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state svg{width:64px;height:64px;margin:0 auto 16px;opacity:.4}
+.controls-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:12px;background:#f1f5f9;color:var(--text2)}
+@media(max-width:900px){.sidebar{width:260px}.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.layout{flex-direction:column}.sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border)}}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+ <div>
+  <h1>Recruiter X-Ray Sourcing Dashboard</h1>
+  <div class="subtitle">LinkedIn X-Ray Search &middot; JD Parsing &middot; Candidate Scoring &middot; Pipeline Tracking</div>
+ </div>
+ <div style="display:flex;gap:10px;align-items:center">
+  <div style="text-align:right;font-size:12px;color:var(--text3)">
+   <div id="globalStats"></div>
+  </div>
+  <button class="btn btn-primary" onclick="openAddRoleModal()">+ Add Role</button>
+ </div>
+</div>
+
+<div class="layout">
+ <div class="sidebar" id="sidebar">
+  <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">Open Roles</div>
+  <div id="roleList"></div>
+  <div style="margin-top:24px">
+   <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:12px">Scheduled Searches</div>
+   <div id="scheduleList"></div>
+  </div>
+ </div>
+ <div class="main" id="mainContent"></div>
+</div>
+
+<!-- Add Role Modal -->
+<div class="modal-overlay" id="addRoleModal">
+ <div class="modal">
+  <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Add New Role</h2>
+  <p style="font-size:13px;color:var(--text3);margin-bottom:20px">Upload or paste a Job Description to auto-generate X-Ray searches and start sourcing.</p>
+
+  <div class="form-group">
+   <label>Upload Job Description (.docx, .pdf, or .txt)</label>
+   <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+    <div style="font-weight:600;color:var(--text)">Drop file here or click to browse</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:4px">Supports .docx, .pdf, .txt</div>
+    <div class="or">or paste text below</div>
+    <input type="file" id="fileInput" accept=".docx,.pdf,.txt" style="display:none" onchange="handleFileUpload(this)">
+   </div>
+   <div id="uploadStatus" style="font-size:12px;margin-top:6px;color:var(--green);display:none"></div>
+  </div>
+
+  <div class="form-group">
+   <label>Or Paste JD Text</label>
+   <textarea id="jdTextInput" placeholder="Paste the full job description here..."></textarea>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+   <div class="form-group"><label>Role Title (auto-filled from JD)</label><input id="roleTitleInput" placeholder="e.g., Marine Insurance Manager"></div>
+   <div class="form-group"><label>Company</label><input id="roleCompanyInput" placeholder="e.g., Shory"></div>
+   <div class="form-group"><label>Location</label><input id="roleLocationInput" placeholder="e.g., Abu Dhabi, UAE"></div>
+   <div class="form-group"><label>Auto-Schedule</label>
+    <select id="roleScheduleInput"><option value="">None (Manual only)</option><option value="Daily">Daily</option><option value="Weekly">Weekly</option><option value="Biweekly">Biweekly</option><option value="Monthly">Monthly</option></select>
+   </div>
+  </div>
+  <div id="scheduleOptions" style="display:none;margin-top:-4px">
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div class="form-group"><label>Day</label>
+     <select id="roleScheduleDay">
+      <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option>
+      <option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option>
+     </select>
+    </div>
+    <div class="form-group"><label>Time</label>
+     <input type="time" id="roleScheduleTime" value="09:00">
+    </div>
+   </div>
+  </div>
+  <div style="display:none">
+  </div>
+
+  <div id="parsePreview" style="display:none"></div>
+
+  <div style="display:flex;gap:10px;margin-top:20px">
+   <button class="btn btn-secondary" style="flex:1" onclick="closeAddRoleModal()">Cancel</button>
+   <button class="btn btn-primary" style="flex:1" onclick="parseAndCreateRole()">Parse JD & Generate Searches</button>
+  </div>
+ </div>
+</div>
+
+<script>
+// ========== STATE ==========
+let roles = [];
+let selectedRoleId = null;
+
+const STORAGE_KEY = 'recruiter_xray_dashboard_v2';
+
+function saveState() {
+ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(roles)); } catch(e) {}
+}
+
+function loadState() {
+ try {
+  const d = localStorage.getItem(STORAGE_KEY);
+  if (d) roles = JSON.parse(d);
+ } catch(e) {}
+}
+
+// ========== JD PARSER ==========
+const JD_PATTERNS = {
+ title: [/job\s*title[:\s]*([^\n|]+)/i, /position[:\s]*([^\n|]+)/i, /role[:\s]*([^\n|]+)/i],
+ location: [/location[:\s]*([^\n|]+)/i, /based\s+in[:\s]*([^\n|]+)/i],
+ experience: [/(\d+)\+?\s*years?\s*(of\s+)?experience/i, /experience[:\s]*(\d+)\+?\s*years?/i, /minimum\s+(\d+)\s*years?/i],
+ education: [/(bachelor|master|phd|doctorate|mba|degree)[^\n.]{0,80}/gi],
+ industry: [/(?:industry|sector|domain)[:\s]*([^\n.]+)/i]
+};
+
+const SKILL_KEYWORDS = {
+ insurance: ["insurance","underwriting","broking","broker","reinsurance","takaful","actuarial","claims","policy","premium","risk assessment","loss adjustment"],
+ marine: ["marine","hull","cargo","p&i","offshore","shipping","maritime","vessel","freight","logistics","port","containerization"],
+ finance: ["finance","accounting","audit","compliance","regulatory","banking","investment","portfolio","treasury","capital markets"],
+ tech: ["python","java","javascript","react","node","aws","cloud","devops","machine learning","ai","data science","sql","kubernetes","docker"],
+ management: ["leadership","strategic","stakeholder management","negotiation","team management","project management","agile","scrum","budget","p&l","client relationship","account management","business development","sales"],
+ hr: ["talent acquisition","recruitment","sourcing","onboarding","employee relations","compensation","benefits","hris","workforce planning","succession planning"],
+ legal: ["contract","legal","compliance","governance","intellectual property","litigation","regulatory","due diligence"],
+ marketing: ["marketing","branding","digital marketing","seo","content","social media","campaign","analytics","crm","market research"]
+};
+
+function parseJD(text) {
+ const result = {
+  title: '', location: '', experience: 0, education: '', industry: '',
+  mustHaveSkills: [], niceToHaveSkills: [], allKeywords: [],
+  rawText: text
+ };
+
+ // Extract title
+ for (const p of JD_PATTERNS.title) {
+  const m = text.match(p);
+  if (m) { result.title = m[1].trim().replace(/[|,].*/,'').trim(); break; }
+ }
+
+ // Extract location
+ for (const p of JD_PATTERNS.location) {
+  const m = text.match(p);
+  if (m) { result.location = m[1].trim().replace(/[|,]{2,}.*/,'').trim(); break; }
+ }
+
+ // Extract experience years
+ for (const p of JD_PATTERNS.experience) {
+  const m = text.match(p);
+  if (m) { result.experience = parseInt(m[1]); break; }
+ }
+
+ // Extract education
+ const eduMatches = text.match(JD_PATTERNS.education[0]);
+ if (eduMatches) result.education = eduMatches.join('; ');
+
+ // Skill extraction
+ const lower = text.toLowerCase();
+ const foundSkills = new Map();
+
+ for (const [category, keywords] of Object.entries(SKILL_KEYWORDS)) {
+  for (const kw of keywords) {
+   if (lower.includes(kw.toLowerCase())) {
+    foundSkills.set(kw, { keyword: kw, category, count: (lower.match(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi')) || []).length });
+   }
+  }
+ }
+
+ // Sort by frequency
+ const sorted = [...foundSkills.values()].sort((a,b) => b.count - a.count);
+ result.mustHaveSkills = sorted.slice(0, 8).map(s => s.keyword);
+ result.niceToHaveSkills = sorted.slice(8, 16).map(s => s.keyword);
+ result.allKeywords = sorted.map(s => s.keyword);
+
+ // Detect industry
+ const categoryHits = {};
+ for (const s of sorted) {
+  categoryHits[s.category] = (categoryHits[s.category] || 0) + s.count;
+ }
+ const topCategory = Object.entries(categoryHits).sort((a,b) => b[1] - a[1])[0];
+ if (topCategory) result.industry = topCategory[0].charAt(0).toUpperCase() + topCategory[0].slice(1);
+
+ // Also try explicit mentions in key accountabilities, requirements sections
+ const sections = text.split(/\n{2,}|(?=\d+\.\s+[A-Z])/);
+ const reqSection = sections.find(s => /requirement|qualification|skill|competenc/i.test(s));
+ if (reqSection) {
+  const bullets = reqSection.match(/[•\-\*]\s*([^\n]+)/g) || [];
+  for (const b of bullets) {
+   const clean = b.replace(/^[•\-\*]\s*/,'').trim();
+   if (clean.length > 3 && clean.length < 80 && !result.mustHaveSkills.includes(clean) && !result.niceToHaveSkills.includes(clean)) {
+    if (result.mustHaveSkills.length < 10) result.mustHaveSkills.push(clean);
+    else if (result.niceToHaveSkills.length < 10) result.niceToHaveSkills.push(clean);
+   }
+  }
+ }
+
+ return result;
+}
+
+// ========== X-RAY SEARCH GENERATOR ==========
+function generateXRaySearches(parsed) {
+ const title = parsed.title || 'professional';
+ const titleWords = title.toLowerCase().split(/\s+/).filter(w => w.length > 3 && !['with','from','the','and','for'].includes(w));
+ const loc = parsed.location || '';
+ const keywords = parsed.mustHaveSkills.slice(0, 4);
+ const niceKeywords = parsed.niceToHaveSkills.slice(0, 3);
+
+ // Build location variants
+ const locParts = loc.split(/[,/]+/).map(l => l.trim()).filter(l => l.length > 1);
+ const locQuery = locParts.length > 0 ? '(' + locParts.map(l => `"${l}"`).join(' OR ') + ')' : '';
+
+ // Broader location (add region terms)
+ const regionTerms = new Set(locParts);
+ const regionMap = {
+  'UAE': ['Dubai','Abu Dhabi','UAE','Middle East','GCC'],
+  'Abu Dhabi': ['Abu Dhabi','UAE','Dubai','GCC'],
+  'Dubai': ['Dubai','UAE','Abu Dhabi','GCC'],
+  'Saudi': ['Saudi Arabia','Riyadh','Jeddah','KSA','GCC'],
+  'India': ['India','Mumbai','Bangalore','Delhi','Hyderabad'],
+  'UK': ['London','UK','United Kingdom'],
+  'US': ['United States','New York','San Francisco','California']
+ };
+ for (const lp of locParts) {
+  for (const [key, vals] of Object.entries(regionMap)) {
+   if (lp.toLowerCase().includes(key.toLowerCase())) vals.forEach(v => regionTerms.add(v));
+  }
+ }
+ const broadLocQuery = regionTerms.size > 0 ? '(' + [...regionTerms].map(l => `"${l}"`).join(' OR ') + ')' : '';
+
+ // Generate adjacent titles
+ const adjacentTitles = generateAdjacentTitles(title);
+
+ const searches = [];
+
+ // 1. Narrow
+ if (locQuery) {
+  searches.push({
+   label: 'Narrow - Exact Title + Location',
+   type: 'narrow',
+   query: `site:linkedin.com/in/ "${title}" ${locQuery}`
+  });
+ }
+
+ // 2. Medium - title keywords + broader location
+ const kwQuote = keywords.slice(0,3).map(k => `"${k}"`).join(' ');
+ searches.push({
+  label: 'Medium - Title + Key Skills + Region',
+  type: 'medium',
+  query: `site:linkedin.com/in/ "${titleWords.slice(0,3).join(' ')}" ${kwQuote} ${broadLocQuery}`
+ });
+
+ // 3. Broad - adjacent titles + region
+ if (adjacentTitles.length > 0) {
+  const titleOr = '(' + adjacentTitles.slice(0,4).map(t => `"${t}"`).join(' OR ') + ')';
+  searches.push({
+   label: 'Broad - Adjacent Titles + Region',
+   type: 'broad',
+   query: `site:linkedin.com/in/ ${titleOr} ${broadLocQuery}`
+  });
+ }
+
+ // 4. Skills-focused
+ if (keywords.length >= 2) {
+  const skillOr = '(' + keywords.map(k => `"${k}"`).join(' OR ') + ')';
+  const seniorityOr = '("manager" OR "senior" OR "head" OR "lead" OR "director")';
+  searches.push({
+   label: 'Adjacent - Skills + Seniority Titles',
+   type: 'adjacent',
+   query: `site:linkedin.com/in/ ${skillOr} ${seniorityOr} ${broadLocQuery}`
+  });
+ }
+
+ // 5. Wide net - no location filter
+ if (keywords.length >= 1) {
+  const allKw = [...keywords, ...niceKeywords].slice(0,4).map(k => `"${k}"`).join(' ');
+  searches.push({
+   label: 'Wide Net - Skills Only (No Location)',
+   type: 'broad',
+   query: `site:linkedin.com/in/ "${titleWords.slice(0,2).join(' ')}" ${allKw}`
+  });
+ }
+
+ return searches;
+}
+
+function generateAdjacentTitles(title) {
+ const lower = title.toLowerCase();
+ const adjacent = [];
+ const titleMappings = {
+  'manager': ['senior specialist', 'team lead', 'head of', 'director', 'assistant manager', 'deputy manager'],
+  'director': ['head of', 'vice president', 'general manager', 'senior manager'],
+  'engineer': ['developer', 'architect', 'specialist', 'consultant'],
+  'analyst': ['associate', 'specialist', 'consultant', 'coordinator'],
+  'specialist': ['analyst', 'consultant', 'expert', 'professional'],
+  'underwriter': ['underwriting manager', 'senior underwriter', 'chief underwriter', 'underwriting specialist'],
+  'broker': ['broking manager', 'account executive', 'relationship manager', 'client manager']
+ };
+
+ for (const [key, alts] of Object.entries(titleMappings)) {
+  if (lower.includes(key)) {
+   for (const alt of alts) {
+    const words = lower.split(/\s+/).filter(w => !['the','and','of','in','at','for','a'].includes(w));
+    const domain = words.filter(w => w !== key).slice(0,2).join(' ');
+    if (domain) adjacent.push(`${domain} ${alt}`);
+    else adjacent.push(alt);
+   }
+  }
+ }
+ return [...new Set(adjacent)].slice(0, 6);
+}
+
+// ========== CANDIDATE SCORING ==========
+function scoreCandidate(candidate, roleData) {
+ const fullText = `${candidate.title} ${candidate.company} ${candidate.snippet || ''}`.toLowerCase();
+ const scores = {};
+
+ // Skills match
+ const mustHave = roleData.jdParsed?.mustHaveSkills || [];
+ const niceToHave = roleData.jdParsed?.niceToHaveSkills || [];
+ let mustHits = 0, niceHits = 0;
+ for (const s of mustHave) { if (fullText.includes(s.toLowerCase())) mustHits++; }
+ for (const s of niceToHave) { if (fullText.includes(s.toLowerCase())) niceHits++; }
+ scores.skills = Math.min(100, Math.round((mustHave.length ? mustHits/mustHave.length : 0.5)*70 + (niceToHave.length ? niceHits/niceToHave.length : 0.5)*30));
+
+ // Experience
+ const expMatch = (candidate.snippet || '').match(/(\d+)\+?\s*years?/i);
+ const expYears = expMatch ? parseInt(expMatch[1]) : 0;
+ const reqYears = roleData.jdParsed?.experience || 0;
+ if (expYears >= reqYears && expYears > 0) scores.experience = Math.min(100, 70 + (expYears - reqYears) * 3);
+ else if (candidate.title.toLowerCase().match(/head|director|general manager|vp|chief/)) scores.experience = 80;
+ else if (candidate.title.toLowerCase().match(/senior|sr\b|manager/)) scores.experience = 65;
+ else scores.experience = 50;
+
+ // Role relevance
+ const targetTitle = (roleData.title || '').toLowerCase();
+ const candidateTitle = (candidate.title || '').toLowerCase();
+ const titleTokens = targetTitle.split(/\s+/).filter(t => t.length > 3);
+ const matches = titleTokens.filter(t => candidateTitle.includes(t));
+ scores.role = Math.min(100, Math.round((matches.length / Math.max(titleTokens.length, 1)) * 80 + 20));
+
+ // Location
+ const roleLoc = (roleData.location || '').toLowerCase();
+ const candLoc = (candidate.location || '').toLowerCase();
+ if (roleLoc && candLoc) {
+  const locTokens = roleLoc.split(/[,\s]+/).filter(t => t.length > 2);
+  const locHits = locTokens.filter(t => candLoc.includes(t));
+  scores.location = locHits.length > 0 ? Math.min(100, 60 + locHits.length * 15) : 40;
+ } else scores.location = 50;
+
+ // Industry
+ scores.industry = Math.min(100, 30 + (mustHits + niceHits) * 10);
+
+ // Overall
+ const w = { skills: .30, experience: .25, role: .25, location: .10, industry: .10 };
+ const overall = Math.round(Object.entries(w).reduce((s, [k, v]) => s + (scores[k] || 50) * v, 0));
+
+ return { overall, ...scores };
+}
+
+// ========== SCHEDULE ENGINE ==========
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function computeNextRun(freq, dayOfWeek, timeStr) {
+ const [hours, minutes] = (timeStr || '09:00').split(':').map(Number);
+ const now = new Date();
+ let next = new Date();
+ next.setHours(hours, minutes, 0, 0);
+
+ if (freq === 'Daily') {
+  if (next <= now) next.setDate(next.getDate() + 1);
+ } else if (freq === 'Weekly') {
+  const currentDay = now.getDay();
+  let diff = dayOfWeek - currentDay;
+  if (diff < 0 || (diff === 0 && next <= now)) diff += 7;
+  next.setDate(now.getDate() + diff);
+ } else if (freq === 'Biweekly') {
+  const currentDay = now.getDay();
+  let diff = dayOfWeek - currentDay;
+  if (diff < 0 || (diff === 0 && next <= now)) diff += 14;
+  next.setDate(now.getDate() + diff);
+ } else if (freq === 'Monthly') {
+  next.setMonth(now.getMonth() + (next <= now ? 1 : 0));
+ }
+ return next.toISOString();
+}
+
+function advanceNextRun(role) {
+ if (!role.scheduledRefresh) return;
+ role.nextRun = computeNextRun(role.scheduledRefresh, role.scheduleDay, role.scheduleTime);
+ role.lastRefresh = new Date().toISOString().split('T')[0];
+ saveState();
+}
+
+function formatNextRun(isoStr) {
+ if (!isoStr) return 'Not set';
+ const d = new Date(isoStr);
+ const now = new Date();
+ const diffMs = d - now;
+ const diffH = Math.round(diffMs / 3600000);
+ const dayName = DAY_NAMES[d.getDay()];
+ const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+ if (diffH < 0) return 'Overdue';
+ if (diffH < 24) return `Today at ${time}`;
+ if (diffH < 48) return `Tomorrow at ${time}`;
+ return `${dayName} at ${time}`;
+}
+
+function updateRoleSchedule(roleId) {
+ const role = roles.find(r => r.id === roleId);
+ if (!role) return;
+ const freq = document.getElementById('editSchedFreq')?.value || '';
+ const day = parseInt(document.getElementById('editSchedDay')?.value || '1');
+ const time = document.getElementById('editSchedTime')?.value || '09:00';
+
+ role.scheduledRefresh = freq || null;
+ role.scheduleDay = freq ? day : null;
+ role.scheduleTime = freq ? time : null;
+ role.nextRun = freq ? computeNextRun(freq, day, time) : null;
+ saveState();
+ renderAll();
+}
+
+function removeSchedule(roleId) {
+ const role = roles.find(r => r.id === roleId);
+ if (!role) return;
+ role.scheduledRefresh = null;
+ role.scheduleDay = null;
+ role.scheduleTime = null;
+ role.nextRun = null;
+ saveState();
+ renderAll();
+}
+
+// Check and auto-run overdue scheduled roles on page load
+function checkScheduledRuns() {
+ const now = new Date();
+ for (const role of roles) {
+  if (!role.scheduledRefresh || !role.nextRun) continue;
+  const nextRun = new Date(role.nextRun);
+  if (nextRun <= now) {
+   console.log(`Auto-running scheduled search for: ${role.title}`);
+   advanceNextRun(role);
+   selectedRoleId = role.id;
+   renderAll();
+   autoScrapeAndScore(role.id);
+   return; // run one at a time to avoid overload
+  }
+ }
+}
+
+// ========== SCHEDULE TOGGLE ==========
+document.addEventListener('DOMContentLoaded', () => {
+ const sel = document.getElementById('roleScheduleInput');
+ if (sel) sel.addEventListener('change', () => {
+  const opts = document.getElementById('scheduleOptions');
+  const daySelect = document.getElementById('roleScheduleDay');
+  if (sel.value && sel.value !== '') {
+   opts.style.display = 'block';
+   // Show/hide day picker based on frequency
+   if (sel.value === 'Daily') {
+    daySelect.closest('.form-group').style.display = 'none';
+   } else {
+    daySelect.closest('.form-group').style.display = '';
+   }
+  } else {
+   opts.style.display = 'none';
+  }
+ });
+});
+
+// ========== FILE HANDLERS ==========
+let uploadedJDText = '';
+
+async function handleFileUpload(input) {
+ const file = input.files[0];
+ if (!file) return;
+ const status = document.getElementById('uploadStatus');
+ status.style.display = 'block';
+ status.style.color = 'var(--blue)';
+ status.textContent = 'Processing file...';
+
+ try {
+  let text = '';
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'txt') {
+   text = await file.text();
+  } else if (ext === 'docx') {
+   const arrayBuffer = await file.arrayBuffer();
+   const result = await mammoth.extractRawText({ arrayBuffer });
+   text = result.value;
+  } else if (ext === 'pdf') {
+   const arrayBuffer = await file.arrayBuffer();
+   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+   const pages = [];
+   for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    pages.push(content.items.map(item => item.str).join(' '));
+   }
+   text = pages.join('\n\n');
+  }
+
+  if (text) {
+   uploadedJDText = text;
+   document.getElementById('jdTextInput').value = text.substring(0, 5000);
+   status.style.color = 'var(--green)';
+   status.textContent = `Loaded ${file.name} (${text.length} characters)`;
+
+   // Auto-parse and fill fields
+   const parsed = parseJD(text);
+   if (parsed.title) document.getElementById('roleTitleInput').value = parsed.title;
+   if (parsed.location) document.getElementById('roleLocationInput').value = parsed.location;
+
+   showParsePreview(parsed);
+  }
+ } catch (e) {
+  status.style.color = 'var(--red)';
+  status.textContent = 'Error reading file: ' + e.message;
+ }
+}
+
+// Drag and drop
+document.addEventListener('DOMContentLoaded', () => {
+ const zone = document.getElementById('uploadZone');
+ if (!zone) return;
+ zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+ zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+ zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('dragover');
+  const fi = document.getElementById('fileInput');
+  fi.files = e.dataTransfer.files;
+  handleFileUpload(fi);
+ });
+});
+
+function showParsePreview(parsed) {
+ const el = document.getElementById('parsePreview');
+ el.style.display = 'block';
+ let html = '<div class="card" style="margin-top:16px;background:#f0fdf4;border-color:#86efac"><div style="font-weight:700;color:var(--green);margin-bottom:8px">JD Parsed Successfully</div>';
+ if (parsed.title) html += `<div style="font-size:13px;margin-bottom:4px"><strong>Title:</strong> ${esc(parsed.title)}</div>`;
+ if (parsed.location) html += `<div style="font-size:13px;margin-bottom:4px"><strong>Location:</strong> ${esc(parsed.location)}</div>`;
+ if (parsed.experience) html += `<div style="font-size:13px;margin-bottom:4px"><strong>Experience:</strong> ${parsed.experience}+ years</div>`;
+ if (parsed.industry) html += `<div style="font-size:13px;margin-bottom:4px"><strong>Industry:</strong> ${esc(parsed.industry)}</div>`;
+ if (parsed.mustHaveSkills.length) {
+  html += '<div style="font-size:13px;margin-top:8px"><strong>Key Skills Detected:</strong></div><div style="margin-top:4px">';
+  parsed.mustHaveSkills.forEach(s => html += `<span class="skill-tag must-tag">${esc(s)}</span>`);
+  html += '</div>';
+ }
+ if (parsed.niceToHaveSkills.length) {
+  html += '<div style="margin-top:6px">';
+  parsed.niceToHaveSkills.forEach(s => html += `<span class="skill-tag nice-tag">${esc(s)}</span>`);
+  html += '</div>';
+ }
+ html += '</div>';
+ el.innerHTML = html;
+}
+
+// ========== ROLE MANAGEMENT ==========
+function openAddRoleModal() {
+ document.getElementById('addRoleModal').classList.add('show');
+ document.getElementById('jdTextInput').value = '';
+ document.getElementById('roleTitleInput').value = '';
+ document.getElementById('roleCompanyInput').value = '';
+ document.getElementById('roleLocationInput').value = '';
+ document.getElementById('roleScheduleInput').value = '';
+ document.getElementById('scheduleOptions').style.display = 'none';
+ document.getElementById('roleScheduleDay').value = '1';
+ document.getElementById('roleScheduleTime').value = '09:00';
+ document.getElementById('parsePreview').style.display = 'none';
+ document.getElementById('uploadStatus').style.display = 'none';
+ uploadedJDText = '';
+}
+
+function closeAddRoleModal() {
+ document.getElementById('addRoleModal').classList.remove('show');
+}
+
+function parseAndCreateRole() {
+ const jdText = uploadedJDText || document.getElementById('jdTextInput').value;
+ const title = document.getElementById('roleTitleInput').value;
+ const company = document.getElementById('roleCompanyInput').value;
+ const location = document.getElementById('roleLocationInput').value;
+ const schedule = document.getElementById('roleScheduleInput').value;
+ const scheduleDay = document.getElementById('roleScheduleDay')?.value || '1';
+ const scheduleTime = document.getElementById('roleScheduleTime')?.value || '09:00';
+
+ if (!title) { alert('Please enter a role title'); return; }
+
+ const parsed = jdText ? parseJD(jdText) : { title, location, mustHaveSkills: [], niceToHaveSkills: [], experience: 0 };
+ if (!parsed.title) parsed.title = title;
+ if (!parsed.location && location) parsed.location = location;
+
+ const searches = generateXRaySearches(parsed);
+
+ const role = {
+  id: 'role-' + Date.now(),
+  title: title || parsed.title,
+  company,
+  location: location || parsed.location,
+  dateSearched: new Date().toISOString().split('T')[0],
+  status: 'New',
+  scheduledRefresh: schedule || null,
+  scheduleDay: schedule ? parseInt(scheduleDay) : null,
+  scheduleTime: schedule ? scheduleTime : null,
+  nextRun: schedule ? computeNextRun(schedule, parseInt(scheduleDay), scheduleTime) : null,
+  lastRefresh: new Date().toISOString().split('T')[0],
+  searchStrings: searches,
+  candidates: [],
+  jdParsed: parsed
+ };
+
+ roles.push(role);
+ selectedRoleId = role.id;
+ role._activeTab = 'candidates';
+ saveState();
+ closeAddRoleModal();
+ renderAll();
+
+ // Auto-run the full scrape pipeline
+ autoScrapeAndScore(role.id);
+}
+
+function runAllSearches(roleId) {
+ autoScrapeAndScore(roleId);
+}
+
+function openSearchManually(roleId) {
+ const role = roles.find(r => r.id === roleId);
+ if (!role || !role.searchStrings.length) return;
+ const confirmed = confirm(`This will open ${role.searchStrings.length} Google search tabs. Continue?`);
+ if (!confirmed) return;
+ role.searchStrings.forEach((s, i) => {
+  setTimeout(() => {
+   const googleUrl = 'https://www.google.com/search?q=' + encodeURIComponent(s.query) + '&num=20';
+   window.open(googleUrl, '_blank');
+  }, i * 600);
+ });
+}
+
+// ========== AUTO-SCRAPE ENGINE ==========
+const CORS_PROXIES = [
+ url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+ url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+ url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+];
+
+async function fetchViaProxy(url) {
+ for (const proxyFn of CORS_PROXIES) {
+  try {
+   const proxyUrl = proxyFn(url);
+   const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
+   if (resp.ok) {
+    const text = await resp.text();
+    if (text.length > 500) return text;
+   }
+  } catch (e) { /* try next proxy */ }
+ }
+ return null;
+}
+
+function parseGoogleResultsHTML(html) {
+ const candidates = [];
+ const parser = new DOMParser();
+ const doc = parser.parseFromString(html, 'text/html');
+
+ // Method 1: Parse structured search results via link hrefs containing linkedin.com/in/
+ const allLinks = doc.querySelectorAll('a[href*="linkedin.com/in/"]');
+ const seen = new Set();
+
+ allLinks.forEach(link => {
+  const href = link.getAttribute('href') || '';
+  // Extract clean LinkedIn URL
+  let liUrl = href;
+  const urlMatch = href.match(/(https?:\/\/[a-z]{2,3}\.linkedin\.com\/in\/[a-zA-Z0-9_-]+)/);
+  if (urlMatch) liUrl = urlMatch[1];
+  else if (href.includes('/url?q=')) {
+   const qMatch = href.match(/\/url\?q=(https?[^&]+)/);
+   if (qMatch) liUrl = decodeURIComponent(qMatch[1]).split('&')[0];
+  }
+
+  if (!liUrl.includes('linkedin.com/in/') || seen.has(liUrl)) return;
+  seen.add(liUrl);
+
+  // Walk up to find the result container
+  let container = link.closest('.tF2Cxc') || link.closest('.g') || link.parentElement?.parentElement?.parentElement;
+  if (!container) return;
+
+  const textContent = container.textContent || '';
+  // Try to extract name from link text or heading
+  let name = '';
+  const h3 = container.querySelector('h3');
+  if (h3) {
+   name = h3.textContent.replace(/\s*[-–|·].*$/, '').replace(/LinkedIn\s*$/, '').trim();
+   // Remove language-specific suffixes
+   name = name.replace(/\u200f/g, '').replace(/\u200e/g, '').trim();
+  }
+  if (!name) {
+   name = link.textContent.replace(/LinkedIn.*$/i, '').replace(/\s*[-–|·].*$/, '').trim();
+  }
+  // Skip if name looks like a URL or is empty
+  if (!name || name.length < 3 || name.includes('linkedin.com')) return;
+
+  // Extract snippet text
+  let snippet = '';
+  const snippetEl = container.querySelector('.VwiC3b') || container.querySelector('[data-sncf]');
+  if (snippetEl) snippet = snippetEl.textContent.trim().substring(0, 300);
+  else {
+   // Fallback: get text after the link
+   snippet = textContent.substring(textContent.indexOf(name) + name.length).trim().substring(0, 300);
+  }
+
+  // Extract title and company from snippet or heading
+  let title = '', company = '', location = '';
+  // Common pattern: "Name - Title - Company" or "Name · Title · Company"
+  const headingText = h3 ? h3.textContent : '';
+  const parts = headingText.split(/\s*[-–|·]\s*/).map(p => p.trim()).filter(p => p && !p.includes('LinkedIn'));
+  if (parts.length >= 2) {
+   name = parts[0].replace(/\u200f/g, '').trim();
+   title = parts.slice(1).join(' · ').substring(0, 80);
+  }
+
+  // Try to find location from snippet
+  const locMatch = snippet.match(/((?:Riyadh|Jeddah|Saudi Arabia|KSA|Dubai|Abu Dhabi|UAE|GCC|Middle East|Cairo|Egypt|Pakistan|India|Lahore|London)[^.;,]*)/i);
+  if (locMatch) location = locMatch[1].trim().substring(0, 50);
+
+  // Try to find company from snippet
+  const compPatterns = [/(?:at|@)\s+([A-Z][A-Za-z\s&.]+?)(?:\.|,|\s[-–]|$)/,
+   /(?:^|\.\s)([A-Z][A-Za-z\s&.]{2,30}?)(?:\.\s|\s[-–]|$)/];
+  for (const pat of compPatterns) {
+   const m = snippet.match(pat);
+   if (m) { company = m[1].trim(); break; }
+  }
+
+  candidates.push({ name, url: liUrl, title, company, location, snippet });
+ });
+
+ // Method 2: Regex fallback if DOM parsing yields few results
+ if (candidates.length < 3) {
+  const linkedinPattern = /https?:\/\/[a-z]{2,3}\.linkedin\.com\/in\/[a-zA-Z0-9_-]+/g;
+  const urls = [...new Set(html.match(linkedinPattern) || [])];
+  for (const url of urls) {
+   if (seen.has(url)) continue;
+   seen.add(url);
+   // Extract name from URL slug
+   const slug = url.split('/in/')[1]?.replace(/-\w+$/, '').replace(/-/g, ' ');
+   if (!slug) continue;
+   const name = slug.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+   // Find surrounding text for context
+   const idx = html.indexOf(url);
+   const surrounding = html.substring(Math.max(0, idx - 300), idx + 300).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+   candidates.push({ name, url, title: '', company: '', location: '', snippet: surrounding.substring(0, 200) });
+  }
+ }
+
+ return candidates;
+}
+
+function deduplicateCandidates(candidates) {
+ const seen = new Map();
+ for (const c of candidates) {
+  const key = c.url.replace(/https?:\/\/[a-z]{2,3}\.linkedin\.com\/in\//, '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+  if (!seen.has(key) || (c.title && !seen.get(key).title)) {
+   seen.set(key, c);
+  }
+ }
+ return [...seen.values()];
+}
+
+async function autoScrapeAndScore(roleId) {
+ const role = roles.find(r => r.id === roleId);
+ if (!role) return;
+
+ // Show progress UI
+ role._scraping = true;
+ role._scrapeProgress = { current: 0, total: role.searchStrings.length, status: 'Starting searches...', candidates: 0 };
+ renderAll();
+
+ let allRawCandidates = [];
+
+ for (let i = 0; i < role.searchStrings.length; i++) {
+  const search = role.searchStrings[i];
+  role._scrapeProgress.current = i + 1;
+  role._scrapeProgress.status = `Searching: ${search.label}...`;
+  renderAll();
+
+  const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(search.query)}&num=20`;
+  const html = await fetchViaProxy(googleUrl);
+
+  if (html) {
+   const parsed = parseGoogleResultsHTML(html);
+   allRawCandidates.push(...parsed);
+   role._scrapeProgress.candidates = deduplicateCandidates(allRawCandidates).length;
+   renderAll();
+  }
+
+  // Small delay between searches to be polite
+  if (i < role.searchStrings.length - 1) {
+   await new Promise(r => setTimeout(r, 1500));
+  }
+ }
+
+ // Deduplicate
+ const unique = deduplicateCandidates(allRawCandidates);
+
+ // Score each candidate
+ role._scrapeProgress.status = `Scoring ${unique.length} candidates...`;
+ renderAll();
+
+ const scored = unique.map(c => {
+  const scores = scoreCandidate(c, role);
+  return {
+   ...c,
+   score: scores.overall,
+   skills: scores.skills,
+   experience: scores.experience,
+   role_score: scores.role,
+   location_score: scores.location,
+   industry: scores.industry
+  };
+ });
+
+ // Sort by score descending
+ scored.sort((a, b) => b.score - a.score);
+
+ // If proxy scraping returned 0 results, fall back to opening tabs manually
+ if (scored.length === 0) {
+  role._scraping = false;
+  delete role._scrapeProgress;
+  role._activeTab = 'searches';
+  saveState();
+  renderAll();
+  alert('Auto-scrape could not fetch results (Google may be blocking proxy requests). Opening searches in browser tabs instead — you can add candidates manually.');
+  openSearchManually(roleId);
+  return;
+ }
+
+ // Merge into role (don't overwrite existing)
+ const existingUrls = new Set(role.candidates.map(c => c.url));
+ const newCandidates = scored.filter(c => !existingUrls.has(c.url));
+ role.candidates = [...role.candidates, ...newCandidates].sort((a, b) => b.score - a.score);
+
+ role._scraping = false;
+ delete role._scrapeProgress;
+ role._activeTab = 'candidates';
+ saveState();
+ renderAll();
+}
+
+function deleteRole(id) {
+ if (!confirm('Delete this role and all its candidates?')) return;
+ roles = roles.filter(r => r.id !== id);
+ if (selectedRoleId === id) selectedRoleId = roles[0]?.id || null;
+ saveState();
+ renderAll();
+}
+
+function updateRoleStatus(id, status) {
+ const role = roles.find(r => r.id === id);
+ if (role) { role.status = status; saveState(); renderAll(); }
+}
+
+// ========== CANDIDATE MANAGEMENT ==========
+function addCandidate(roleId) {
+ const role = roles.find(r => r.id === roleId);
+ if (!role) return;
+
+ const name = prompt('Candidate Name:');
+ if (!name) return;
+ const title = prompt('Current Title:') || '';
+ const company = prompt('Current Company:') || '';
+ const linkedinUrl = prompt('LinkedIn URL:') || '';
+ const location = prompt('Location:') || '';
+ const snippet = prompt('Notes/Snippet:') || '';
+
+ const candidate = { name, title, company, url: linkedinUrl, location, snippet, addedAt: new Date().toISOString() };
+ const scores = scoreCandidate(candidate, role);
+ Object.assign(candidate, { score: scores.overall, skills: scores.skills, experience: scores.experience, role_score: scores.role, location_score: scores.location, industry: scores.industry });
+
+ role.candidates.push(candidate);
+ role.candidates.sort((a, b) => b.score - a.score);
+ saveState();
+ renderAll();
+}
+
+function removeCandidate(roleId, candIdx) {
+ const role = roles.find(r => r.id === roleId);
+ if (role && confirm('Remove this candidate?')) {
+  role.candidates.splice(candIdx, 1);
+  saveState();
+  renderAll();
+ }
+}
+
+// ========== CSV EXPORT ==========
+function exportCSV(roleId) {
+ const role = roles.find(r => r.id === roleId);
+ if (!role) return;
+ let csv = 'Name,LinkedIn URL,Title,Company,Location,Score,Skills,Experience,Role Fit,Location Fit,Industry\n';
+ for (const c of role.candidates) {
+  csv += [c.name,c.url,c.title,c.company,c.location,c.score,c.skills,c.experience,c.role_score,c.location_score,c.industry].map(v => `"${(v||'').toString().replace(/"/g,'""')}"`).join(',') + '\n';
+ }
+ const blob = new Blob([csv], { type: 'text/csv' });
+ const a = document.createElement('a');
+ a.href = URL.createObjectURL(blob);
+ a.download = `${role.title.replace(/[^a-zA-Z0-9]/g,'_')}_candidates.csv`;
+ a.click();
+}
+
+// ========== RENDERING ==========
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderAll() {
+ renderSidebar();
+ renderMain();
+ renderGlobalStats();
+}
+
+function renderGlobalStats() {
+ const el = document.getElementById('globalStats');
+ const totalCandidates = roles.reduce((s, r) => s + r.candidates.length, 0);
+ el.innerHTML = `<div>${roles.length} role${roles.length !== 1 ? 's' : ''}</div><div>${totalCandidates} candidates</div>`;
+}
+
+function renderSidebar() {
+ const list = document.getElementById('roleList');
+ if (roles.length === 0) {
+  list.innerHTML = '<div style="text-align:center;padding:30px 10px;color:var(--text3);font-size:13px">No roles yet.<br>Click <strong>+ Add Role</strong> to start.</div>';
+ } else {
+  list.innerHTML = roles.map(r => {
+   const statusClass = r.status === 'New' ? 'badge-new' : r.status === 'In Review' ? 'badge-review' : 'badge-closed';
+   return `<div class="role-card ${r.id === selectedRoleId ? 'active' : ''}" onclick="selectedRoleId='${r.id}';renderAll()">
+    <div style="display:flex;justify-content:space-between;align-items:start">
+     <h3>${esc(r.title)}</h3>
+     <span class="badge ${statusClass}">${r.status}</span>
+    </div>
+    <div class="meta">${esc(r.company || '')}${r.company && r.location ? ' · ' : ''}${esc(r.location || '')}</div>
+    <div class="mini-stats">
+     <div><span>${r.candidates.length}</span> candidates</div>
+     <div>Top: <span style="color:${r.candidates[0]?.score >= 60 ? 'var(--green)' : 'var(--yellow)'}">${r.candidates[0]?.score || 0}</span></div>
+     <div>${esc(r.dateSearched)}</div>
+    </div>
+   </div>`;
+  }).join('');
+ }
+
+ // Scheduled
+ const schedList = document.getElementById('scheduleList');
+ const scheduled = roles.filter(r => r.scheduledRefresh);
+ if (scheduled.length === 0) {
+  schedList.innerHTML = '<div style="font-size:12px;color:var(--text3);font-style:italic">No scheduled searches</div>';
+ } else {
+  schedList.innerHTML = scheduled.map(r => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12px;cursor:pointer" onclick="selectedRoleId='${r.id}';renderAll()">
+   <div><div style="font-weight:600;color:var(--text)">${esc(r.title).substring(0,25)}${r.title.length > 25 ? '...' : ''}</div><div style="color:var(--text3)">${r.nextRun ? 'Next: ' + formatNextRun(r.nextRun) : 'Last: ' + (r.lastRefresh || 'Never')}</div></div>
+   <div style="text-align:right"><span class="badge badge-new">${r.scheduledRefresh}</span>${r.scheduleTime ? '<div style="color:var(--text3);font-size:10px;margin-top:2px">' + r.scheduleTime + '</div>' : ''}</div>
+  </div>`).join('');
+ }
+}
+
+function renderMain() {
+ const main = document.getElementById('mainContent');
+ const role = roles.find(r => r.id === selectedRoleId);
+
+ if (!role) {
+  main.innerHTML = `<div class="empty-state">
+   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+   <div style="font-size:18px;font-weight:600;margin-bottom:6px">No Role Selected</div>
+   <div style="font-size:14px">Select a role from the sidebar or add a new one to start sourcing.</div>
+  </div>`;
+  return;
+ }
+
+ const cands = role.candidates;
+ const avg = cands.length ? Math.round(cands.reduce((s, c) => s + c.score, 0) / cands.length) : 0;
+ const high = cands.filter(c => c.score >= 60).length;
+ const top = cands[0]?.score || 0;
+
+ // Get active tab
+ const activeTab = role._activeTab || 'candidates';
+
+ main.innerHTML = `
+  <div class="card">
+   <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+    <div>
+     <h2 style="font-size:22px;font-weight:700">${esc(role.title)}</h2>
+     <div style="font-size:14px;color:var(--text2)">${esc(role.company || '')}${role.company && role.location ? ' · ' : ''}${esc(role.location || '')}</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+     <select onchange="updateRoleStatus('${role.id}',this.value)" style="padding:6px 10px;font-size:12px;font-weight:600">
+      <option ${role.status==='New'?'selected':''}>New</option>
+      <option ${role.status==='In Review'?'selected':''}>In Review</option>
+      <option ${role.status==='Closed'?'selected':''}>Closed</option>
+     </select>
+     <button class="btn btn-danger btn-sm" onclick="deleteRole('${role.id}')">Delete</button>
+    </div>
+   </div>
+   <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border:1px solid var(--border);border-radius:10px;font-size:12px;flex-wrap:wrap">
+    <div style="font-weight:700;color:var(--text2)">Schedule:</div>
+    <select id="editSchedFreq" onchange="(function(){var d=document.getElementById('editSchedDayWrap');var f=document.getElementById('editSchedFreq').value;d.style.display=(f&&f!=='Daily')?'inline-flex':'none';document.getElementById('editSchedTimeWrap').style.display=f?'inline-flex':'none'})()" style="padding:4px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border)">
+     <option value="" ${!role.scheduledRefresh?'selected':''}>None</option>
+     <option value="Daily" ${role.scheduledRefresh==='Daily'?'selected':''}>Daily</option>
+     <option value="Weekly" ${role.scheduledRefresh==='Weekly'?'selected':''}>Weekly</option>
+     <option value="Biweekly" ${role.scheduledRefresh==='Biweekly'?'selected':''}>Biweekly</option>
+     <option value="Monthly" ${role.scheduledRefresh==='Monthly'?'selected':''}>Monthly</option>
+    </select>
+    <div id="editSchedDayWrap" style="display:${role.scheduledRefresh && role.scheduledRefresh!=='Daily'?'inline-flex':'none'};align-items:center;gap:4px">
+     <select id="editSchedDay" style="padding:4px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border)">
+      <option value="1" ${role.scheduleDay===1?'selected':''}>Mon</option><option value="2" ${role.scheduleDay===2?'selected':''}>Tue</option>
+      <option value="3" ${role.scheduleDay===3?'selected':''}>Wed</option><option value="4" ${role.scheduleDay===4?'selected':''}>Thu</option>
+      <option value="5" ${role.scheduleDay===5?'selected':''}>Fri</option><option value="6" ${role.scheduleDay===6?'selected':''}>Sat</option>
+      <option value="0" ${role.scheduleDay===0?'selected':''}>Sun</option>
+     </select>
+    </div>
+    <div id="editSchedTimeWrap" style="display:${role.scheduledRefresh?'inline-flex':'none'};align-items:center;gap:4px">
+     <input type="time" id="editSchedTime" value="${role.scheduleTime||'09:00'}" style="padding:4px 8px;font-size:12px;border-radius:6px;border:1px solid var(--border)">
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="updateRoleSchedule('${role.id}')" style="padding:4px 12px;font-size:11px">Save Schedule</button>
+    ${role.scheduledRefresh ? '<button class="btn btn-danger btn-sm" onclick="removeSchedule(\'' + role.id + '\')" style="padding:4px 12px;font-size:11px">Remove</button>' : ''}
+    ${role.nextRun ? '<div style="color:var(--text3);margin-left:auto;font-size:11px">Next run: ' + formatNextRun(role.nextRun) + '</div>' : ''}
+   </div>
+   <div class="stat-grid">
+    <div class="stat-box" style="background:var(--blue-light)"><div class="num" style="color:var(--blue)">${cands.length}</div><div class="lbl" style="color:#3b82f6">Total Candidates</div></div>
+    <div class="stat-box" style="background:var(--green-light)"><div class="num" style="color:var(--green)">${top}</div><div class="lbl" style="color:var(--green)">Top Score</div></div>
+    <div class="stat-box" style="background:var(--yellow-light)"><div class="num" style="color:var(--yellow)">${avg}</div><div class="lbl" style="color:var(--yellow)">Avg Score</div></div>
+    <div class="stat-box" style="background:var(--purple-light)"><div class="num" style="color:var(--purple)">${high}</div><div class="lbl" style="color:var(--purple)">Score 60+</div></div>
+   </div>
+  </div>
+
+  <div class="tabs" style="margin-top:16px">
+   <div class="tab-btn ${activeTab==='candidates'?'active':''}" onclick="setTab('${role.id}','candidates')">Candidates (${cands.length})</div>
+   <div class="tab-btn ${activeTab==='searches'?'active':''}" onclick="setTab('${role.id}','searches')">X-Ray Searches (${role.searchStrings.length})</div>
+   <div class="tab-btn ${activeTab==='jd'?'active':''}" onclick="setTab('${role.id}','jd')">JD Summary</div>
+  </div>
+
+  <div id="tabContent"></div>
+ `;
+
+ const tabContent = document.getElementById('tabContent');
+
+ if (activeTab === 'candidates') {
+  let html = `<div class="controls-bar">
+   <button class="btn btn-success btn-sm" onclick="addCandidate('${role.id}')">+ Add Candidate</button>
+   <button class="btn btn-secondary btn-sm" onclick="exportCSV('${role.id}')">Export CSV</button>
+   <div style="flex:1"></div>
+   <select id="sortSelect" onchange="sortCandidates('${role.id}',this.value)" style="padding:5px 10px;font-size:12px">
+    <option value="score">Sort by Score</option>
+    <option value="name">Sort by Name</option>
+    <option value="skills">Sort by Skills</option>
+    <option value="experience">Sort by Experience</option>
+   </select>
+  </div>`;
+
+  // Show scraping progress if active
+  if (role._scraping && role._scrapeProgress) {
+   const p = role._scrapeProgress;
+   const pct = Math.round((p.current / Math.max(p.total, 1)) * 100);
+   html += `<div class="card" style="background:linear-gradient(135deg,var(--blue-light),var(--purple-light));border-color:#93c5fd;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+     <div class="spinner"></div>
+     <div style="font-weight:700;color:var(--blue)">${esc(p.status)}</div>
+    </div>
+    <div style="background:#e2e8f0;border-radius:8px;height:8px;overflow:hidden">
+     <div style="background:linear-gradient(90deg,var(--blue),var(--purple));height:100%;width:${pct}%;border-radius:8px;transition:width .3s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text2)">
+     <span>Search ${p.current} of ${p.total}</span>
+     <span>${p.candidates} candidates found</span>
+    </div>
+   </div>`;
+  }
+
+  if (cands.length === 0 && !role._scraping) {
+   html += '<div style="text-align:center;padding:40px;color:var(--text3);font-size:14px">No candidates yet. Click <b>Run Auto-Scrape</b> in X-Ray Searches tab, or add candidates manually.</div>';
+  } else {
+   html += cands.map((c, i) => {
+    const scoreClass = c.score >= 75 ? 'score-high' : c.score >= 55 ? 'score-med' : 'score-low';
+    const barColor = v => v >= 75 ? 'var(--green)' : v >= 55 ? 'var(--yellow)' : 'var(--red)';
+    return `<div class="cand-row" id="cand-${i}">
+     <div class="score-badge ${scoreClass}">${c.score}</div>
+     <div class="info">
+      <h4>${esc(c.name)} ${c.url ? `<a href="${esc(c.url)}" target="_blank">LinkedIn ↗</a>` : ''}</h4>
+      <div class="title">${esc(c.title)}${c.company ? ' · ' + esc(c.company) : ''}</div>
+      <div class="loc">${esc(c.location || '')}</div>
+      <div class="cand-detail" id="detail-${i}" style="display:none">
+       <div class="bar-row"><div class="bar-label">Skills</div><div class="bar-bg"><div class="bar-fill" style="width:${c.skills||0}%;background:${barColor(c.skills||0)}"></div></div><div class="bar-val" style="color:${barColor(c.skills||0)}">${c.skills||0}</div></div>
+       <div class="bar-row"><div class="bar-label">Experience</div><div class="bar-bg"><div class="bar-fill" style="width:${c.experience||0}%;background:${barColor(c.experience||0)}"></div></div><div class="bar-val" style="color:${barColor(c.experience||0)}">${c.experience||0}</div></div>
+       <div class="bar-row"><div class="bar-label">Role Fit</div><div class="bar-bg"><div class="bar-fill" style="width:${c.role_score||0}%;background:${barColor(c.role_score||0)}"></div></div><div class="bar-val" style="color:${barColor(c.role_score||0)}">${c.role_score||0}</div></div>
+       <div class="bar-row"><div class="bar-label">Location</div><div class="bar-bg"><div class="bar-fill" style="width:${c.location_score||0}%;background:${barColor(c.location_score||0)}"></div></div><div class="bar-val" style="color:${barColor(c.location_score||0)}">${c.location_score||0}</div></div>
+       ${c.snippet ? `<div style="font-size:12px;color:var(--text2);margin-top:8px;font-style:italic">${esc(c.snippet)}</div>` : ''}
+       <div style="margin-top:8px"><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeCandidate('${role.id}',${i})">Remove</button></div>
+      </div>
+     </div>
+     <svg class="toggle-arrow" onclick="toggleDetail(${i})" style="width:20px;height:20px;color:var(--text3);flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+    </div>`;
+   }).join('');
+  }
+  tabContent.innerHTML = html;
+
+ } else if (activeTab === 'searches') {
+  let html = `<div class="card" style="background:linear-gradient(135deg,#eff6ff,#ede9fe);border-color:#93c5fd;margin-bottom:16px">
+   <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div>
+     <div style="font-weight:700;font-size:14px;color:var(--blue)">Auto-Scrape & Score Pipeline</div>
+     <div style="font-size:12px;color:var(--text2);margin-top:2px">Fetches Google results, extracts LinkedIn profiles, and scores candidates automatically</div>
+    </div>
+    <div style="display:flex;gap:8px">
+     <button class="btn btn-primary btn-sm" onclick="autoScrapeAndScore('${role.id}')" style="white-space:nowrap">Run Auto-Scrape</button>
+     <button class="btn btn-secondary btn-sm" onclick="openSearchManually('${role.id}')" style="white-space:nowrap">Open Manually</button>
+    </div>
+   </div>
+  </div>`;
+  html += role.searchStrings.map((s, i) => {
+   const typeClass = 'badge-' + s.type;
+   const googleUrl = 'https://www.google.com/search?q=' + encodeURIComponent(s.query) + '&num=20';
+   return `<div class="search-str">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+     <span class="badge ${typeClass}">${s.type.toUpperCase()}</span>
+     <span style="font-weight:600;font-size:13px">${esc(s.label)}</span>
+     <div style="flex:1"></div>
+     <a href="${googleUrl}" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none">Open in Google ↗</a>
+     <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(${JSON.stringify(s.query).replace(/"/g,'&quot;')});this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+    </div>
+    <code>${esc(s.query)}</code>
+   </div>`;
+  }).join('');
+  tabContent.innerHTML = html;
+
+ } else if (activeTab === 'jd') {
+  const p = role.jdParsed || {};
+  let html = '<div class="card">';
+  if (p.title) html += `<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:4px">Job Title</div><div>${esc(p.title)}</div></div>`;
+  if (p.location) html += `<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:4px">Location</div><div>${esc(p.location)}</div></div>`;
+  if (p.experience) html += `<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:4px">Experience Required</div><div>${p.experience}+ years</div></div>`;
+  if (p.education) html += `<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:4px">Education</div><div>${esc(p.education)}</div></div>`;
+  if (p.industry) html += `<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:4px">Industry</div><div>${esc(p.industry)}</div></div>`;
+  if (p.mustHaveSkills?.length) {
+   html += '<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:6px">Must-Have Skills</div><div>';
+   p.mustHaveSkills.forEach(s => html += `<span class="skill-tag must-tag">${esc(s)}</span>`);
+   html += '</div></div>';
+  }
+  if (p.niceToHaveSkills?.length) {
+   html += '<div style="margin-bottom:12px"><div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:6px">Nice-to-Have Skills</div><div>';
+   p.niceToHaveSkills.forEach(s => html += `<span class="skill-tag nice-tag">${esc(s)}</span>`);
+   html += '</div></div>';
+  }
+  if (p.rawText) {
+   html += `<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+    <div style="font-weight:700;font-size:13px;color:var(--text2);margin-bottom:6px">Full JD Text</div>
+    <div style="max-height:300px;overflow-y:auto;font-size:12px;color:var(--text2);white-space:pre-wrap;background:#f8fafc;padding:12px;border-radius:8px;border:1px solid var(--border)">${esc(p.rawText.substring(0, 5000))}</div>
+   </div>`;
+  }
+  html += '</div>';
+  tabContent.innerHTML = html;
+ }
+}
+
+function setTab(roleId, tab) {
+ const role = roles.find(r => r.id === roleId);
+ if (role) { role._activeTab = tab; renderMain(); }
+}
+
+function toggleDetail(idx) {
+ const el = document.getElementById('detail-' + idx);
+ const arrow = el?.parentElement?.parentElement?.querySelector('.toggle-arrow');
+ if (el) {
+  const showing = el.style.display !== 'none';
+  el.style.display = showing ? 'none' : 'block';
+  if (arrow) arrow.classList.toggle('open', !showing);
+ }
+}
+
+function sortCandidates(roleId, by) {
+ const role = roles.find(r => r.id === roleId);
+ if (!role) return;
+ if (by === 'name') role.candidates.sort((a, b) => a.name.localeCompare(b.name));
+ else if (by === 'score') role.candidates.sort((a, b) => b.score - a.score);
+ else if (by === 'skills') role.candidates.sort((a, b) => (b.skills||0) - (a.skills||0));
+ else if (by === 'experience') role.candidates.sort((a, b) => (b.experience||0) - (a.experience||0));
+ saveState();
+ renderMain();
+}
+
+// ========== SEED DATA ==========
+function seedExistingData() {
+ if (roles.length > 0) return;
+
+ const seedRole = {
+  id: 'mgr-technical-insurance-marine-shory',
+  title: 'Manager Technical Insurance - Marine',
+  company: 'Shory',
+  location: 'Abu Dhabi, UAE',
+  dateSearched: '2026-04-13',
+  status: 'In Review',
+  scheduledRefresh: 'Weekly',
+  lastRefresh: '2026-04-13',
+  _activeTab: 'candidates',
+  jdParsed: {
+   title: 'Manager Technical Insurance - Marine',
+   location: 'Abu Dhabi, UAE',
+   experience: 8,
+   education: "Bachelor's degree in Insurance, Finance or related field",
+   industry: 'Insurance',
+   mustHaveSkills: ['Marine insurance','Marine underwriting','Insurance broking','Negotiation','Stakeholder management','Portfolio management','Regulatory compliance','Client relationship management'],
+   niceToHaveSkills: ['Leadership','Strategic thinking','Analytical thinking','Cargo insurance','Hull insurance','P&I insurance','Reinsurance','Sales targets'],
+   rawText: 'Manager Technical Insurance - Marine\nReports to: Director - Technical Insurance\nLocation: Abu Dhabi, UAE\nDepartment: Insurance\n\n8+ years experience in insurance, with marine specialization.\nBachelor\'s degree in Insurance, Finance or related field. Professional certification preferred.'
+  },
+  searchStrings: [
+   { label: 'Narrow - Exact Role + Location', type: 'narrow', query: 'site:linkedin.com/in/ "marine insurance" "manager" ("Abu Dhabi" OR "UAE")' },
+   { label: 'Medium - Marine Insurance + Gulf Region', type: 'medium', query: 'site:linkedin.com/in/ "marine insurance" ("manager" OR "head" OR "director") ("Abu Dhabi" OR "Dubai" OR "UAE" OR "Middle East" OR "GCC")' },
+   { label: 'Broad - Marine Underwriting/Broking Titles', type: 'broad', query: 'site:linkedin.com/in/ ("marine underwriter" OR "marine insurance manager" OR "marine broker" OR "marine insurance specialist") ("UAE" OR "Abu Dhabi" OR "Dubai" OR "Middle East" OR "GCC")' },
+   { label: 'Adjacent - Cargo/Hull/P&I Insurance', type: 'adjacent', query: 'site:linkedin.com/in/ ("cargo insurance" OR "hull insurance" OR "P&I" OR "marine cargo") ("manager" OR "senior" OR "lead") ("UAE" OR "Abu Dhabi" OR "Dubai" OR "Middle East")' },
+   { label: 'Wide Net - Marine Insurance Global', type: 'broad', query: 'site:linkedin.com/in/ "marine insurance" ("technical manager" OR "technical underwriter" OR "portfolio manager") ("broking" OR "underwriting" OR "reinsurance")' }
+  ],
+  candidates: [
+   { name:'Meenakshi Srinath', url:'https://ae.linkedin.com/in/meenakshi-srinath-01ab534', title:'Head of Marine, Middle East', company:'Berkshire Hathaway Specialty Insurance', location:'UAE', score:65, skills:46, experience:83, role_score:98, location_score:85, industry:78, snippet:'Recognized Marine Insurance professional. Previously Assistant Manager Marine at Dubai National Insurance.' },
+   { name:'Vyankatesh Murlidhar Tak', url:'https://ae.linkedin.com/in/vyankatesh-murlidhar-tak-3500321a', title:'Senior Underwriter - Head of Marine MENA', company:'Markel International', location:'Dubai, UAE', score:64, skills:44, experience:83, role_score:98, location_score:85, industry:75, snippet:'Head of Marine MENA at Markel. Previously at Aon Risk Solutions and ADNIC Abu Dhabi.' },
+   { name:'Rishi Raj', url:'https://ae.linkedin.com/in/rishi-raj-marine', title:'Marine Underwriter', company:'Abu Dhabi National Takaful', location:'Dubai, UAE', score:63, skills:51, experience:98, role_score:73, location_score:85, industry:80, snippet:'18+ years of expertise in marine insurance. Abu Dhabi National Takaful.' },
+   { name:'Amanda El Shakankiri', url:'https://ae.linkedin.com/in/amandashaks', title:'FAC Underwriting Manager - Marine', company:'Saudi Re', location:'UAE / Saudi Arabia', score:62, skills:47, experience:83, role_score:78, location_score:70, industry:76, snippet:'FAC Underwriting Manager Marine at Saudi Re. Previously Senior UW Marine at AIG Dubai.' },
+   { name:'Sajad Salim', url:'https://ae.linkedin.com/in/sajad-salim-94002980', title:'General Manager (Non-Motor & Marine)', company:'Omega Insurance Brokers LLC', location:'Dubai, UAE', score:61, skills:39, experience:83, role_score:88, location_score:85, industry:66, snippet:'General Manager (Non-Motor & Marine Insurance). Omega Insurance Brokers LLC.' },
+   { name:'Sonia Khiara', url:'https://ae.linkedin.com/in/sonia-khiara', title:'Marine Underwriter', company:'Earnest Insurance Brokers LLC', location:'Dubai, UAE', score:60, skills:42, experience:88, role_score:73, location_score:85, industry:72, snippet:'Marine Underwriter. 13+ years experience in marine insurance.' },
+   { name:'Afzal Rahman', url:'https://ae.linkedin.com/in/afzal-rahman-58104432', title:'Sr Manager - Marine', company:'Marine Insurance Professional', location:'UAE', score:60, skills:51, experience:98, role_score:83, location_score:85, industry:80, snippet:'16+ years in Marine Hull and Marine Liabilities Underwriting in the UAE market.' },
+   { name:'Bobyson Varghese', url:'https://ae.linkedin.com/in/bobyson-varghese-1a2163111', title:'Marine Underwriting Manager', company:'Al-Ittihad Al-Watani Insurance', location:'UAE', score:58, skills:39, experience:73, role_score:93, location_score:85, industry:66, snippet:'Marine Underwriting Manager at Al Ittihad Al Watani Insurance.' },
+   { name:'Abad Ali (Dip-CII)', url:'https://ae.linkedin.com/in/abad-ali-dip-cii-59b45a284', title:'Asst Manager - UW (Marine)', company:'Abu Dhabi National Insurance PJSC', location:'Dubai, UAE', score:57, skills:55, experience:53, role_score:58, location_score:85, industry:78, snippet:'Dip-CII certified. Results-driven Marine Insurance professional at ADNIC.' },
+   { name:'Sayyid Mohammed Favas', url:'https://ae.linkedin.com/in/sayyid-mohammed-favas-aiii-371520210', title:'Sr Relationship Exec - Marine', company:'Nasco Insurance Brokers', location:'Dubai, UAE', score:56, skills:55, experience:53, role_score:53, location_score:85, industry:78, snippet:'AIII & MBA Insurance certified. Hull, P&I, Cargo specialist.' },
+   { name:'Dilna Dilip Kumar', url:'https://ae.linkedin.com/in/dilna-dilip-kumar-654a30120', title:'Marine Underwriter', company:'RSA', location:'Dubai, UAE', score:53, skills:30, experience:53, role_score:73, location_score:85, industry:60, snippet:'Marine Underwriter at RSA Dubai.' },
+   { name:'Jamsheer Panolath', url:'https://in.linkedin.com/in/jamsheer-jp', title:'Marine Insurance Specialist', company:'Gargash Insurance Services LLC', location:'Dubai, UAE', score:53, skills:42, experience:53, role_score:68, location_score:85, industry:72, snippet:'Insurance Specialist and Marine Underwriter at Gargash Insurance Services.' },
+   { name:'Anjali Chaturvedi', url:'https://ae.linkedin.com/in/anjali-chaturvedi-marine', title:'Marine Claims Manager', company:'City Insurance Brokers LLC', location:'UAE', score:52, skills:30, experience:53, role_score:63, location_score:85, industry:60, snippet:'Marine Claims Manager. Decisive leader in marine insurance.' },
+   { name:'Marwa Shaker', url:'https://ae.linkedin.com/in/marwa-shaker-marine', title:'Marine Insurance Brokers', company:'Marine Insurance Brokers', location:'UAE', score:51, skills:30, experience:85, role_score:53, location_score:85, industry:60, snippet:'12+ years operations experience in marine insurance broking.' },
+   { name:'Vishal Arora', url:'https://ae.linkedin.com/in/vishal-arora-marine', title:'Asst Manager - Marine', company:'Nasco Insurance Brokers', location:'Dubai, UAE', score:50, skills:30, experience:53, role_score:58, location_score:85, industry:60, snippet:'Marine Insurance Expert at Nasco M.E. Insurance Brokers.' },
+   { name:'Kavitha Shyam', url:'https://ae.linkedin.com/in/kavitha-shyam-43145646', title:'Marine Manager', company:'City Marine Insurance Brokers', location:'UAE', score:50, skills:30, experience:73, role_score:93, location_score:85, industry:60, snippet:'Marine Manager at City Marine Insurance Brokers.' },
+   { name:'Shalin Dhanushka', url:'https://lk.linkedin.com/in/shalin-dhanushka-7b11a491', title:'Marine Underwriter', company:'GR Risk Partners Limited', location:'Dubai, UAE', score:49, skills:21, experience:53, role_score:73, location_score:85, industry:51, snippet:'Marine Underwriter. CIMA qualified. GR Risk Partners.' },
+   { name:'Charles Aoun', url:'https://ae.linkedin.com/in/charles-aoun-marine', title:'Marine Underwriter', company:'AIG', location:'Dubai, UAE', score:49, skills:21, experience:53, role_score:73, location_score:85, industry:51, snippet:'Marine Underwriter at AIG Dubai.' },
+   { name:'Sanjana Samuel', url:'https://ae.linkedin.com/in/sanjana-samuel-684063196', title:'Marine Underwriter', company:'', location:'UAE', score:46, skills:30, experience:53, role_score:73, location_score:85, industry:60, snippet:'Marine Underwriter liaising with Underwriters in US & UAE.' }
+  ]
+ };
+
+ roles = [seedRole];
+ selectedRoleId = seedRole.id;
+ saveState();
+}
+
+// ========== CANDIDATE DATA BANK ==========
+// Pre-scraped candidates that can be auto-injected into matching roles
+const CANDIDATE_BANK = {
+ 'senior-api-engineer': {
+  titleMatch: ['api engineer','api developer','integration engineer','senior api'],
+  candidates: [
+   {name:'Syed Abdul Khaliq',url:'https://www.linkedin.com/in/syed-abdul-khaliq-905622a7',title:'Senior API Engineer | Apigee | Java',company:'',location:'Saudi Arabia',score:66,skills:9,experience:100,role_score:100,location_score:80,industry:54,snippet:'Senior Backend & API Engineer with 10+ years of experience building secure, scalable microservices and API platforms using Java.'},
+   {name:'Abdalla Ahmed',url:'https://sa.linkedin.com/in/abduamigo',title:'API & AI Integration Engineer',company:'dnet',location:'Riyadh, Saudi Arabia',score:60,skills:0,experience:100,role_score:88,location_score:95,industry:30,snippet:'Senior Web Developer. API & AI Integration Engineer. SaaS, Automations & Scalable Systems. 8+ Years. Riyadh.'},
+   {name:'Usman Shafi',url:'https://www.linkedin.com/in/usman-shafi-77889488',title:'Apigee Architect | Integration Engineer',company:'TAHAKOM',location:'Saudi Arabia',score:59,skills:15,experience:75,role_score:88,location_score:80,industry:54,snippet:'Apigee Consultant with expertise in Apigee API Management, System Integration. 3 years in Riyadh.'},
+   {name:'ATEEQ REHMAN',url:'https://ae.linkedin.com/in/mateequrrehman',title:'Senior .NET Engineer | API Integration Specialist',company:'MOEI UAE',location:'Dubai, UAE',score:54,skills:0,experience:80,role_score:100,location_score:55,industry:30,snippet:'Smart Data Specialist (API Integration Specialist). CQRS patterns, API Gateway. Also worked in Riyadh, Saudi Arabia.'},
+   {name:'Adel Badawy',url:'https://sa.linkedin.com/in/adel-badawy-029443107',title:'Integration Architect | Mulesoft | Apigee',company:'TAHAKOM',location:'Riyadh, Saudi Arabia',score:50,skills:6,experience:70,role_score:67,location_score:95,industry:46,snippet:'Integration Architect. Ministry of Municipal and Rural Affairs. 2+ years in Riyadh. Apigee Certified API Engineer.'},
+   {name:'Mohammad Ateeb Shaik',url:'https://in.linkedin.com/in/mohammad-ateeb-shaik-641159136',title:'API Architect',company:'stc',location:'Riyadh, Saudi Arabia',score:47,skills:3,experience:75,role_score:57,location_score:95,industry:38,snippet:'API Architect at stc. Apigee Certified Professional API Engineer. 3+ years in Riyadh.'},
+   {name:'Rimsha Aizaz',url:'https://sa.linkedin.com/in/rimsha-aizaz-1101ra',title:'API Engineer',company:'iSolution',location:'Riyadh, Saudi Arabia',score:47,skills:3,experience:55,role_score:78,location_score:95,industry:38,snippet:'Apigee Certified Professional API Engineer at iSolution, Riyadh.'},
+   {name:'Mohamed Elzorkany',url:'https://sa.linkedin.com/in/mohamed-elzorkany-04038710a',title:'API Engineer',company:'Al Rajhi Takaful',location:'Riyadh, Saudi Arabia',score:47,skills:3,experience:55,role_score:78,location_score:95,industry:38,snippet:'Apigee Certified Professional API Engineer at Al Rajhi Takaful, Riyadh.'},
+   {name:'Mohammed Hefny',url:'https://www.linkedin.com/in/mohammed-hefny-49941989',title:'Senior Backend Engineer',company:'Sure Global Technology',location:'Saudi Arabia',score:47,skills:0,experience:80,role_score:63,location_score:80,industry:30,snippet:'Senior Backend Engineer. Designed and developed scalable backend APIs for governance and meeting management. 1+ years in Saudi Arabia.'},
+   {name:'Mohammed DhiefAllah',url:'https://sa.linkedin.com/in/mohammed-dhiefallah',title:'API Engineer',company:'Lean Business Services',location:'Riyadh, Saudi Arabia',score:47,skills:3,experience:55,role_score:78,location_score:95,industry:38,snippet:'Apigee Certified Professional API Engineer at Lean Business Services, Riyadh. 5.9K+ connections.'},
+   {name:'Amr Mohammed',url:'https://sa.linkedin.com/in/amr-mohammed-tech',title:'API Engineer',company:'Technology Control Company (TAHAKOM)',location:'Riyadh, Saudi Arabia',score:47,skills:3,experience:55,role_score:78,location_score:95,industry:38,snippet:'Apigee Certified Professional API Engineer at Technology Control Company, Riyadh.'},
+   {name:'Youssef Hussein',url:'https://sa.linkedin.com/in/youssef-hussein-59b360244',title:'API Developer',company:'Advansys',location:'Riyadh, Saudi Arabia',score:44,skills:0,experience:70,role_score:57,location_score:95,industry:30,snippet:'API Developer at Advansys. Previously Integration Engineer for 2+ years in Riyadh.'},
+   {name:'Yousef Alaa',url:'https://eg.linkedin.com/in/yousef-alaa-232150207',title:'Integration Engineer',company:'EJADA',location:'Riyadh, Saudi Arabia',score:43,skills:0,experience:70,role_score:52,location_score:95,industry:30,snippet:'Integration Engineer at EJADA. 2+ years in Riyadh. KSA requirements gathering and technical implementation.'},
+   {name:'Ali Haider',url:'https://pk.linkedin.com/in/ali-haider-7501bb212',title:'Software Developer | API Integration Expert',company:'Huawei',location:'Riyadh, Saudi Arabia',score:43,skills:0,experience:55,role_score:67,location_score:95,industry:30,snippet:'Software Developer & API Integration Expert. Data Engineering, ETL. Currently at Huawei, Riyadh.'},
+   {name:'Hassan Rawashdeh',url:'https://sa.linkedin.com/in/hassan-rawashdeh-0b66673a',title:'Integration Engineer',company:'Tiqmo',location:'Saudi Arabia',score:42,skills:0,experience:70,role_score:52,location_score:80,industry:30,snippet:'Experienced Application Consultant. Integration Engineer. Senior System experience. 2+ years in Riyadh.'},
+   {name:'Nora Alsaeed',url:'https://sa.linkedin.com/in/nora-alsaeed-1750bb241',title:'Integration Engineer',company:'Lean Business Services',location:'Riyadh, Saudi Arabia',score:41,skills:3,experience:55,role_score:52,location_score:95,industry:38,snippet:'Integration Engineer at Lean Business Services. API Design, Google Cloud. Princess Noura University graduate.'},
+   {name:'Mohammad Al Ramis',url:'https://sa.linkedin.com/in/mohammad-al-ramis',title:'Integration Engineer',company:'Ericsson',location:'Riyadh, Saudi Arabia',score:41,skills:3,experience:55,role_score:52,location_score:95,industry:38,snippet:'Integration Engineer at Ericsson. AWS Certified Solutions Architect. Delivered automation cutting 128 hours of work.'},
+   {name:'Attiya Riaz',url:'https://sa.linkedin.com/in/attiya-riaz-ab514615a',title:'Integration Specialist Manager',company:'ROSHN',location:'Riyadh, Saudi Arabia',score:38,skills:0,experience:70,role_score:30,location_score:95,industry:30,snippet:'API Engineer expertise. Integration Specialist Manager at ROSHN. 2+ years in Riyadh. Solution designing and development.'}
+  ]
+ }
+};
+
+// Auto-inject candidates into roles that have 0 candidates but match a bank entry
+function autoInjectCandidates() {
+ let changed = false;
+ for (const role of roles) {
+  if (role.candidates.length > 0) continue;
+  const roleTitle = (role.title || '').toLowerCase();
+  for (const [key, bank] of Object.entries(CANDIDATE_BANK)) {
+   const match = bank.titleMatch.some(t => roleTitle.includes(t));
+   if (match) {
+    role.candidates = JSON.parse(JSON.stringify(bank.candidates));
+    role._activeTab = 'candidates';
+    changed = true;
+    break;
+   }
+  }
+ }
+ if (changed) saveState();
+}
+
+// ========== INIT ==========
+loadState();
+if (roles.length === 0) seedExistingData();
+autoInjectCandidates();
+if (!selectedRoleId && roles.length > 0) selectedRoleId = roles[0].id;
+renderAll();
+
+// Check for scheduled runs every 60 seconds
+checkScheduledRuns();
+setInterval(checkScheduledRuns, 60000);
+</script>
+
+</body>
+</html>
