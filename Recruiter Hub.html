@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recruiter Hub</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b}
+.setup-bg{min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e293b,#0f172a);display:flex;align-items:center;justify-content:center;padding:24px}
+.setup-card{width:100%;max-width:640px}
+.setup-title{text-align:center;margin-bottom:32px}
+.setup-title h1{font-size:2rem;font-weight:800;color:#fff;margin-bottom:8px}
+.setup-title p{color:#94a3b8;font-size:1rem}
+.badge{display:inline-block;background:rgba(255,255,255,0.1);border-radius:20px;padding:4px 16px;color:#2dd4bf;font-size:13px;font-weight:600;margin-bottom:12px}
+.card{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.15);overflow:hidden}
+.mode-tabs{display:flex;border-bottom:1px solid #e2e8f0}
+.mode-tab{flex:1;padding:12px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;background:#f8fafc;color:#94a3b8;border:none;border-bottom:2px solid transparent;transition:all .2s}
+.mode-tab.active{background:#fff;color:#1e293b;border-bottom-color:#14b8a6}
+.form-body{padding:24px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid .full{grid-column:1/-1}
+.form-label{display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.form-input,.form-select,.form-textarea{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:14px;outline:none;transition:border .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#14b8a6;box-shadow:0 0 0 3px rgba(20,184,166,0.1)}
+.form-textarea{resize:none;height:160px}
+.btn{border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#0d9488,#059669);color:#fff;width:100%;font-size:16px;padding:14px}
+.btn-primary:hover{opacity:.9}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:#f1f5f9;color:#64748b}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-accent{background:#f97316;color:#fff}
+.btn-accent:hover{background:#ea580c}
+.btn-dark{background:#1e293b;color:#fff}
+.btn-dark:hover{background:#334155}
+.btn-row{display:flex;gap:8px;align-items:center}
+
+/* App layout */
+.app-topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.app-logo{color:#0d9488;font-weight:800;font-size:17px}
+.app-meta{color:#94a3b8;font-size:13px;margin-left:12px}
+.tab-bar{background:#fff;border-bottom:1px solid #e2e8f0;display:flex;gap:4px;padding:0 20px;position:sticky;top:44px;z-index:10;overflow-x:auto}
+.tab-btn{padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:#94a3b8;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+.tab-btn:hover{color:#475569;background:#f8fafc}
+.tab-btn.active{color:#0d9488;border-bottom-color:#14b8a6;background:#f0fdfa}
+.content{max-width:1024px;margin:0 auto;padding:20px}
+.page-banner{border-radius:12px;padding:16px 20px;margin-bottom:16px;color:#fff}
+.page-banner h2{font-size:18px;font-weight:700}
+.page-banner p{font-size:13px;opacity:.7}
+
+/* Shared components */
+.section{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:16px}
+.section-header{padding:12px 20px;color:#fff;font-weight:700;font-size:14px}
+.section-body{padding:16px 20px}
+.section-body p{font-size:14px;line-height:1.6;color:#475569}
+.kv-row{display:flex;gap:8px;font-size:14px;margin-bottom:6px}
+.kv-label{font-weight:700;color:#64748b;min-width:140px}
+.kv-value{color:#1e293b}
+.bullet{display:flex;gap:8px;font-size:14px;color:#475569;margin-bottom:6px;line-height:1.5}
+.bullet-icon{flex-shrink:0;margin-top:2px}
+.teal{color:#14b8a6}.green{color:#10b981}.amber{color:#f59e0b}.red{color:#ef4444}.purple{color:#7c3aed}
+
+/* Pipeline cards */
+.pipeline-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:16px}
+.pipeline-card{border-radius:12px;padding:12px 8px;text-align:center}
+.pipeline-card .count{font-size:24px;font-weight:800}
+.pipeline-card .label{font-size:11px;font-weight:600;margin-top:4px;line-height:1.2}
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.metric-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;text-align:center}
+.metric-card .num{font-size:28px;font-weight:800}
+.metric-card .lbl{font-size:12px;color:#94a3b8;margin-top:4px}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 16px;background:#f8fafc;font-weight:700;color:#64748b;border-bottom:1px solid #e2e8f0;font-size:11px;text-transform:uppercase}
+td{padding:10px 16px;border-bottom:1px solid #f1f5f9}
+tr:hover td{background:#f8fafc}
+
+/* Scorecard */
+.comp-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;margin-bottom:10px}
+.comp-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border-bottom:1px solid #f1f5f9}
+.comp-title{font-weight:700;font-size:14px;color:#1e293b}
+.comp-signal{font-size:12px;color:#94a3b8;margin-top:2px}
+.rating-btns{display:flex;gap:4px}
+.rating-btn{width:36px;height:36px;border-radius:8px;border:none;font-weight:700;font-size:14px;cursor:pointer;transition:all .15s;background:#f1f5f9;color:#94a3b8}
+.rating-btn:hover{background:#e2e8f0}
+.rating-btn.r1{background:#ef4444;color:#fff;transform:scale(1.1)}
+.rating-btn.r2{background:#f59e0b;color:#fff;transform:scale(1.1)}
+.rating-btn.r3{background:#14b8a6;color:#fff;transform:scale(1.1)}
+.rating-btn.r4{background:#10b981;color:#fff;transform:scale(1.1)}
+.comp-notes{width:100%;border:none;padding:10px 16px;font-size:13px;resize:none;outline:none;font-family:inherit}
+.comp-notes::placeholder{color:#cbd5e1}
+
+/* Rating scale bar */
+.scale-bar{display:flex;gap:8px;margin-bottom:16px}
+.scale-item{flex:1;border-radius:8px;padding:10px;text-align:center;border:1px solid #e2e8f0}
+.scale-num{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;margin-bottom:4px}
+.scale-label{font-size:12px;font-weight:600;color:#475569}
+
+/* Decision buttons */
+.decision-btns{display:flex;gap:8px}
+.decision-btn{flex:1;padding:10px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;background:#f1f5f9;color:#94a3b8;transition:all .15s}
+.decision-btn:hover{background:#e2e8f0}
+.decision-btn.sel-1{background:#ef4444;color:#fff}.decision-btn.sel-2{background:#f59e0b;color:#fff}
+.decision-btn.sel-3{background:#14b8a6;color:#fff}.decision-btn.sel-4{background:#10b981;color:#fff}
+
+/* Prep guide */
+.stage-banner{padding:12px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between}
+.stage-banner h3{font-weight:700;font-size:15px}
+.stage-meta{display:flex;gap:8px}
+.stage-meta span{background:rgba(255,255,255,0.2);border-radius:4px;padding:2px 8px;font-size:12px}
+.prep-row{padding:12px 16px;display:flex;gap:12px;border-bottom:1px solid #f1f5f9}
+.prep-row:last-child{border-bottom:none}
+.prep-icon{color:#14b8a6;font-weight:700;flex-shrink:0;margin-top:2px}
+.prep-label{font-weight:700;font-size:13px;color:#1e293b;margin-bottom:2px}
+.prep-content{font-size:13px;color:#64748b;line-height:1.5;white-space:pre-line}
+.tip-row{padding:10px 16px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid #f1f5f9}
+.tip-check{color:#10b981;font-weight:700;flex-shrink:0}
+
+/* Tracker */
+.add-form{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:16px;margin-bottom:12px}
+.add-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.status-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.status-Active{background:#ccfbf1;color:#0d9488}
+.status-Hired{background:#d1fae5;color:#059669}
+.status-Rejected{background:#fee2e2;color:#dc2626}
+.status-OnHold{background:#fef3c7;color:#d97706}
+.status-Withdrawn{background:#f1f5f9;color:#64748b}
+.empty-state{text-align:center;padding:48px 20px;background:#f8fafc;border-radius:12px}
+.empty-state .icon{font-size:48px;margin-bottom:8px}
+
+/* Stage timeline */
+.timeline{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.timeline-card{flex-shrink:0;min-width:100px;border-radius:12px;padding:10px;text-align:center;color:#fff}
+.timeline-card .num{font-size:20px;font-weight:800}
+.timeline-card .name{font-size:11px;font-weight:600}
+.timeline-card .dur{font-size:10px;opacity:.75}
+
+/* Level matrix */
+.matrix-table{font-size:11px}
+.matrix-table th,.matrix-table td{padding:8px;border:1px solid #e2e8f0;vertical-align:top}
+.matrix-table th{background:#f8fafc;text-align:center;font-size:10px}
+.target-col{background:#f0fdfa !important;box-shadow:inset 0 0 0 2px #14b8a6}
+.target-note{background:#f0fdfa;padding:8px 16px;text-align:center;font-size:12px;color:#0d9488;font-weight:600;border-top:1px solid #e2e8f0}
+
+/* History panel */
+.history-panel{margin-top:24px;width:100%}
+.history-title{font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.history-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between}
+.history-card:hover{background:rgba(255,255,255,0.1);border-color:rgba(20,184,166,0.4);transform:translateY(-1px)}
+.history-info{flex:1;min-width:0}
+.history-role{font-weight:700;color:#e2e8f0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-meta{font-size:12px;color:#64748b;margin-top:2px}
+.history-actions{display:flex;gap:6px;margin-left:12px;flex-shrink:0}
+.history-btn{width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.history-btn.open{background:rgba(20,184,166,0.15);color:#5eead4}
+.history-btn.open:hover{background:rgba(20,184,166,0.3)}
+.history-btn.del{background:rgba(239,68,68,0.1);color:#fca5a5}
+.history-btn.del:hover{background:rgba(239,68,68,0.25)}
+.history-empty{text-align:center;color:#475569;font-size:13px;padding:20px;background:rgba(255,255,255,0.03);border-radius:12px;border:1px dashed rgba(255,255,255,0.08)}
+.autosave-badge{position:fixed;bottom:16px;right:16px;background:#059669;color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;transition:opacity .3s;z-index:50;pointer-events:none}
+.autosave-badge.show{opacity:1}
+
+/* Responsive */
+@media(max-width:768px){
+  .pipeline-grid{grid-template-columns:repeat(4,1fr)}
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .add-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef } = React;
+
+const LEVELS = [
+  { id:"L3", title:"Junior", track:"IC" },{ id:"L4", title:"Mid", track:"IC" },
+  { id:"L5", title:"Senior", track:"IC" },{ id:"L6", title:"Staff", track:"IC" },
+  { id:"L7", title:"Eng Manager", track:"Mgmt" },{ id:"L8", title:"Sr Director", track:"Mgmt" },
+  { id:"L9", title:"VP", track:"Mgmt" },
+];
+const STAGES = [
+  { key:"sourced",label:"Sourced",bg:"#cfd8dc",fg:"#455a64" },
+  { key:"screening",label:"Screening",bg:"#b3e5fc",fg:"#0277bd" },
+  { key:"phone",label:"Phone Interview",bg:"#c8e6c9",fg:"#2e7d32" },
+  { key:"technical",label:"Technical Round",bg:"#fff9c4",fg:"#f57f17" },
+  { key:"hm",label:"HM Round",bg:"#ffe0b2",fg:"#e65100" },
+  { key:"final",label:"Final / Panel",bg:"#e1bee7",fg:"#6a1b9a" },
+  { key:"offer",label:"Offer",bg:"#ffcdd2",fg:"#c62828" },
+];
+const STATUSES = ["Active","On Hold","Rejected","Withdrawn","Hired"];
+
+function genJD(r){
+  return {
+    summary:`We're hiring a ${r.title} (${r.level}) to design, build, and scale systems within ${r.department} at ${r.company}. This person will own key workstreams end-to-end and operate as a force multiplier on a growing team.`,
+    resp:["Design, build, and maintain core systems and services.","Own features end-to-end — from design through production.","Build and optimize integrations with internal and third-party systems.","Improve performance, reliability, and scalability.","Collaborate cross-functionally with product, design, and engineering.","Participate in code reviews, architecture discussions, and planning.","Mentor team members through pairing, reviews, and knowledge sharing.","Contribute to on-call rotation and incident response."],
+    must:["5+ years of relevant professional experience.","Strong proficiency in core technologies for the role.","Deep experience designing production-grade systems.","Solid understanding of databases and system architecture.","Hands-on cloud platform experience (AWS, Azure, GCP).","Track record of owning services in production.","Clear technical communication skills."],
+    nice:[`Experience in ${r.company}'s industry or domain.`,"Familiarity with event-driven or distributed systems.","CI/CD, infrastructure-as-code, or DevOps experience.","Security best practices knowledge.","Legacy system modernization experience.","Open-source contributions or side projects."]
+  };
+}
+function genQuestions(r){
+  return [`What are the top 3 must-have skills for this ${r.title} role?`,"Is this a backfill or net-new headcount?","What does the current team look like — size and gaps?","What are the first 2-3 projects for the first 90 days?","What's the biggest gap this hire fills?","Any non-negotiable technologies?","Who's on the interview panel?","Target timeline — when do you need someone?","Remote, hybrid, or on-site?",`What distinguishes ${r.level} from the level below?`];
+}
+function genComps(r){
+  return [
+    {name:"System Design & Architecture",signal:"Decomposes problems into components and data models. Articulates tradeoffs. Opinions grounded in production experience."},
+    {name:"Core Technical Skills",signal:`Strong proficiency in technologies relevant to ${r.title}. Handles edge cases. Writes clean, tested code.`},
+    {name:"Ownership & Reliability",signal:"Takes work from spec to production. Thinks about monitoring and failure modes. Owns incidents end-to-end."},
+    {name:"Communication & Collaboration",signal:"Explains concepts to technical and non-technical audiences. Asks clarifying questions. Gives constructive feedback."},
+    {name:"Data & Domain Proficiency",signal:"Understands data modeling and query optimization. Reasons about consistency in distributed systems."},
+    {name:"Mentorship & Team Impact",signal:"Helps others grow through reviews, pairing, documentation. Improves team processes beyond own work."}
+  ];
+}
+function genMatrix(r){
+  return [
+    {stage:"Screening",who:"Recruiter",dur:"30 min",comp:"Qualifications, communication, motivation",fmt:"Resume walkthrough, role fit",wt:"Pass/Fail"},
+    {stage:"Phone Interview",who:"Senior Team Member",dur:"45 min",comp:"Core skills, problem-solving",fmt:"Technical screen + practical exercise",wt:"1-4"},
+    {stage:"Technical Round",who:"2 Panel Members",dur:"60 min",comp:"System design, deep technical, data",fmt:"Design exercise + coding deep-dive",wt:"1-4"},
+    {stage:"HM Round",who:r.hiringManager,dur:"45 min",comp:"Ownership, collaboration, team impact",fmt:"Behavioral + situational questions",wt:"1-4"},
+    {stage:"Final / Panel",who:"Skip-level + Cross-functional",dur:"45 min",comp:"Culture fit, mentorship, strategy",fmt:"Values alignment, growth mindset",wt:"1-4"},
+  ];
+}
+function genPrep(r){
+  return [
+    {stage:"Screening Call",num:"01",dur:"30 min",who:"Recruiter",color:"#0d9488",sections:[
+      {l:"What to Expect",c:`A friendly 30-min call about your background and the ${r.title} role at ${r.company}. Not a technical test.`},
+      {l:"How to Prepare",c:"Review the JD. Be ready to discuss your most relevant experience, what you're looking for, and timeline/comp expectations."},
+      {l:"Sample Questions",c:`"Walk me through your current role."\n"What are you looking for next?"\n"What's your timeline and comp expectation?"`},
+      {l:"Questions to Ask",c:`"What does the team structure look like?"\n"What are the biggest challenges?"\n"What's the full interview process?"`}
+    ]},
+    {stage:"Phone Interview",num:"02",dur:"45 min",who:"Senior Team Member",color:"#2563eb",sections:[
+      {l:"What to Expect",c:"A technical screen with live problem-solving. You'll work through practical scenarios in a shared editor."},
+      {l:"How to Prepare",c:"Brush up on fundamentals. Practice writing clean, working solutions — not pseudocode. Think about edge cases."},
+      {l:"Pro Tips",c:"Talk through your approach before diving in.\nStart with a working solution, then optimize.\nAsk clarifying questions.\nTest with normal and edge cases."}
+    ]},
+    {stage:"Technical Deep-Dive",num:"03",dur:"60 min",who:"2 Panel Members",color:"#d97706",sections:[
+      {l:"What to Expect",c:"Part 1 (~35 min): System design exercise. Part 2 (~25 min): Deep dive into a past project you've worked on."},
+      {l:"How to Prepare",c:"Practice designing systems end-to-end. Be ready to discuss tradeoffs, draw diagrams, and handle ambiguity."},
+      {l:"Framework",c:"1. Clarify requirements\n2. Estimate scale\n3. High-level architecture\n4. Drill into components\n5. Discuss tradeoffs\n6. Address failure modes"},
+      {l:"Great Answers",c:"Don't try to build the perfect system — make deliberate tradeoffs, explain your reasoning, and acknowledge what you're optimizing for vs sacrificing."}
+    ]},
+    {stage:"Hiring Manager",num:"04",dur:"45 min",who:r.hiringManager,color:"#7c3aed",sections:[
+      {l:"What to Expect",c:`A behavioral interview with ${r.hiringManager}. Focused on how you work — ownership, conflict resolution, collaboration.`},
+      {l:"How to Prepare",c:"Prepare 3-4 STAR stories: owning a project end-to-end, handling a crisis, navigating disagreement, mentoring someone."},
+      {l:"Sample Questions",c:`"Tell me about owning something from zero to production."\n"Describe a production incident you handled."\n"How do you handle competing priorities?"\n"Tell me about helping someone grow."`},
+      {l:"Questions to Ask",c:`"What does success look like in 6 months?"\n"Biggest team challenge right now?"\n"What's the growth path from ${r.level}?"`}
+    ]},
+    {stage:"Final / Panel",num:"05",dur:"45 min",who:"Skip-level + Cross-functional",color:"#059669",sections:[
+      {l:"What to Expect",c:`Conversational round with senior leaders focused on values, growth, and collaboration. Mutual evaluation.`},
+      {l:"How to Prepare",c:`Research ${r.company}'s mission. Be ready to discuss impact beyond your team: mentoring, process improvements, cross-functional partnerships.`},
+      {l:"Sample Questions",c:`"What drew you to ${r.company}?"\n"Tell me about improving something that wasn't your job."\n"What's your mentoring philosophy?"\n"Where do you want to be in 3 years?"`}
+    ]}
+  ];
+}
+
+// ─── SETUP FORM ───
+// ─── SESSION HISTORY (localStorage) ───
+const STORAGE_KEY = "recruiterHub_sessions";
+function loadSessions(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch(e){ return []; }
+}
+function saveSession(role, cands){
+  const sessions = loadSessions();
+  const existing = sessions.findIndex(s => s.id === role._sessionId);
+  const entry = {
+    id: role._sessionId || Date.now().toString(),
+    role: {...role, _sessionId: undefined},
+    cands: cands || [],
+    updatedAt: new Date().toISOString(),
+    createdAt: existing >= 0 ? sessions[existing].createdAt : new Date().toISOString()
+  };
+  if(existing >= 0) sessions[existing] = entry;
+  else sessions.unshift(entry);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions.slice(0, 50)));
+  return entry.id;
+}
+function deleteSession(id){
+  const sessions = loadSessions().filter(s => s.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+}
+
+function SetupForm({onSubmit, onLoadSession}){
+  const [mode,setMode]=useState("manual");
+  const [jd,setJd]=useState("");
+  const [uploadName,setUploadName]=useState("");
+  const [f,setF]=useState({title:"",company:"",department:"",hiringManager:"",level:"L5",location:""});
+  const upd=(k,v)=>setF({...f,[k]:v});
+  const handleFileUpload=(file)=>{
+    setUploadName(file.name);
+    const ext=file.name.split(".").pop().toLowerCase();
+    if(ext==="txt"||ext==="md"){
+      const reader=new FileReader();
+      reader.onload=e=>{setJd(e.target.result)};
+      reader.readAsText(file);
+    } else if(ext==="pdf"){
+      const reader=new FileReader();
+      reader.onload=async e=>{
+        try{
+          if(!window.pdfjsLib){
+            const s=document.createElement("script");
+            s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+            document.head.appendChild(s);
+            await new Promise(r=>{s.onload=r;setTimeout(r,5000)});
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+          }
+          const pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(e.target.result)}).promise;
+          let text="";
+          for(let i=1;i<=pdf.numPages;i++){
+            const page=await pdf.getPage(i);
+            const content=await page.getTextContent();
+            text+=content.items.map(item=>item.str).join(" ")+"\n";
+          }
+          setJd(text);
+        }catch(err){alert("Could not parse PDF. Try pasting the text instead.");console.error(err)}
+      };
+      reader.readAsArrayBuffer(file);
+    } else if(ext==="docx"||ext==="doc"){
+      const reader=new FileReader();
+      reader.onload=async e=>{
+        try{
+          if(!window.mammoth){
+            const s=document.createElement("script");
+            s.src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+            document.head.appendChild(s);
+            await new Promise(r=>{s.onload=r;setTimeout(r,5000)});
+          }
+          const result=await window.mammoth.extractRawText({arrayBuffer:e.target.result});
+          setJd(result.value);
+        }catch(err){alert("Could not parse DOCX. Try pasting the text instead.");console.error(err)}
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      alert("Unsupported file type. Please upload a .txt, .pdf, or .docx file.");
+    }
+  };
+  const parseJD=()=>{
+    const p={...f};const lines=jd.split("\n");
+    lines.forEach(line=>{const l=line.toLowerCase();
+      if((l.includes("title")||l.includes("position"))&&l.includes(":"))p.title=line.split(":").slice(1).join(":").trim();
+      if(l.includes("company")&&l.includes(":"))p.company=line.split(":").slice(1).join(":").trim();
+      if(l.includes("department")&&l.includes(":"))p.department=line.split(":").slice(1).join(":").trim();
+      if((l.includes("hiring manager")||l.includes("reports to"))&&l.includes(":"))p.hiringManager=line.split(":").slice(1).join(":").trim();
+      if(l.includes("location")&&l.includes(":"))p.location=line.split(":").slice(1).join(":").trim();
+    });
+    if(!p.title&&lines[0])p.title=lines[0].replace(/^(job\s*title|position|role)\s*[:—-]?\s*/i,"").trim();
+    setF(p);setMode("manual");
+  };
+  return(
+    <div className="setup-bg">
+      <div className="setup-card">
+        <div className="setup-title">
+          <div className="badge">Recruiter Hub</div>
+          <h1>Recruitment Command Center</h1>
+          <p>Enter role details or paste a JD to generate your full hiring toolkit.</p>
+        </div>
+        <div className="card">
+          <div className="mode-tabs">
+            <button className={`mode-tab ${mode==="manual"?"active":""}`} onClick={()=>setMode("manual")}>Enter Details</button>
+            <button className={`mode-tab ${mode==="jd"?"active":""}`} onClick={()=>setMode("jd")}>Paste / Upload JD</button>
+          </div>
+          <div className="form-body">
+            {mode==="jd"?(
+              <div>
+                <div style={{border:"2px dashed #cbd5e1",borderRadius:12,padding:24,textAlign:"center",marginBottom:16,background:"#f8fafc",cursor:"pointer",transition:"all 0.2s"}}
+                  onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor="#6366f1";e.currentTarget.style.background="#eef2ff"}}
+                  onDragLeave={e=>{e.currentTarget.style.borderColor="#cbd5e1";e.currentTarget.style.background="#f8fafc"}}
+                  onDrop={e=>{e.preventDefault();e.currentTarget.style.borderColor="#cbd5e1";e.currentTarget.style.background="#f8fafc";const file=e.dataTransfer.files[0];if(file)handleFileUpload(file)}}
+                  onClick={()=>document.getElementById("jd-file-input").click()}>
+                  <div style={{fontSize:32,marginBottom:8}}>📄</div>
+                  <div style={{fontWeight:600,color:"#334155",marginBottom:4}}>Drop a JD file here or click to browse</div>
+                  <div style={{fontSize:12,color:"#94a3b8"}}>Supports .txt, .pdf, .docx files</div>
+                  {uploadName&&<div style={{marginTop:8,fontSize:13,color:"#6366f1",fontWeight:600}}>✓ {uploadName}</div>}
+                  <input id="jd-file-input" type="file" accept=".txt,.pdf,.docx,.doc" style={{display:"none"}} onChange={e=>{const file=e.target.files[0];if(file)handleFileUpload(file)}} />
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+                  <div style={{flex:1,height:1,background:"#e2e8f0"}}></div>
+                  <span style={{fontSize:12,color:"#94a3b8",fontWeight:600}}>OR PASTE BELOW</span>
+                  <div style={{flex:1,height:1,background:"#e2e8f0"}}></div>
+                </div>
+                <textarea className="form-textarea" value={jd} onChange={e=>setJd(e.target.value)} placeholder="Paste the full job description text here..." />
+                <div className="btn-row" style={{marginTop:12}}>
+                  <button className="btn btn-primary" onClick={parseJD} disabled={!jd.trim()}>Parse JD & Fill Form →</button>
+                </div>
+              </div>
+            ):(
+              <div>
+                <div className="form-grid">
+                  <div className="full"><label className="form-label">Role Title *</label><input className="form-input" value={f.title} onChange={e=>upd("title",e.target.value)} placeholder="e.g. Senior Backend Engineer" /></div>
+                  <div><label className="form-label">Company</label><input className="form-input" value={f.company} onChange={e=>upd("company",e.target.value)} placeholder="e.g. First Tech FCU" /></div>
+                  <div><label className="form-label">Department</label><input className="form-input" value={f.department} onChange={e=>upd("department",e.target.value)} placeholder="e.g. Technology" /></div>
+                  <div><label className="form-label">Hiring Manager</label><input className="form-input" value={f.hiringManager} onChange={e=>upd("hiringManager",e.target.value)} placeholder="e.g. Devendra Tiwari" /></div>
+                  <div><label className="form-label">Level</label><select className="form-select" value={f.level} onChange={e=>upd("level",e.target.value)}>{LEVELS.map(l=><option key={l.id} value={l.id}>{l.id} — {l.title} ({l.track})</option>)}</select></div>
+                  <div className="full"><label className="form-label">Location</label><input className="form-input" value={f.location} onChange={e=>upd("location",e.target.value)} placeholder="Remote / Hybrid / On-site" /></div>
+                </div>
+                <div style={{marginTop:16}}><button className="btn btn-primary" onClick={()=>f.title.trim()&&onSubmit(f)} disabled={!f.title.trim()}>Generate Recruiter Hub →</button></div>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* ── ROLE HISTORY ── */}
+        <div className="history-panel">
+          <div className="history-title"><span>📋</span> Recent Roles</div>
+          {(()=>{
+            const sessions = loadSessions();
+            if(sessions.length === 0) return <div className="history-empty">No previous roles yet. Your sessions will appear here.</div>;
+            return sessions.slice(0, 10).map(s => (
+              <div key={s.id} className="history-card">
+                <div className="history-info" onClick={()=>onLoadSession(s)}>
+                  <div className="history-role">{s.role.title}</div>
+                  <div className="history-meta">
+                    {s.role.company}{s.role.company && " · "}{s.role.level} · {s.cands.length} candidate{s.cands.length!==1?"s":""} · {new Date(s.updatedAt).toLocaleDateString()}
+                  </div>
+                </div>
+                <div className="history-actions">
+                  <button className="history-btn open" title="Open this role" onClick={()=>onLoadSession(s)}>→</button>
+                  <button className="history-btn del" title="Delete" onClick={(e)=>{e.stopPropagation();if(confirm("Delete this role session?")){deleteSession(s.id);window.location.reload()}}}>&times;</button>
+                </div>
+              </div>
+            ));
+          })()}
+        </div>
+        <p style={{textAlign:"center",color:"#475569",fontSize:11,marginTop:16}}>Sessions auto-save to your browser. Nothing is sent to a server.</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── DASHBOARD ───
+function Dashboard({role,cands}){
+  const counts=STAGES.map(s=>({...s,count:cands.filter(c=>c.stage===s.label).length}));
+  const active=cands.filter(c=>c.status==="Active").length;
+  const hired=cands.filter(c=>c.status==="Hired").length;
+  const rejected=cands.filter(c=>c.status==="Rejected").length;
+  return(<div>
+    <div style={{background:"linear-gradient(135deg,#1e293b,#0f172a)",borderRadius:16,padding:24,color:"#fff",marginBottom:16}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <h2 style={{fontSize:22,fontWeight:800}}>{role.title}</h2>
+        <span style={{background:"rgba(20,184,166,0.2)",color:"#5eead4",padding:"4px 14px",borderRadius:20,fontSize:13,fontWeight:600}}>{role.level}</span>
+      </div>
+      <p style={{color:"#94a3b8",fontSize:14}}>{role.company} · {role.department} · HM: {role.hiringManager}</p>
+    </div>
+    <h3 style={{fontSize:12,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Pipeline Snapshot</h3>
+    <div className="pipeline-grid">
+      {counts.map(s=><div key={s.key} className="pipeline-card" style={{background:s.bg,color:s.fg}}><div className="count">{s.count}</div><div className="label">{s.label}</div></div>)}
+    </div>
+    <div className="metrics-grid">
+      {[{l:"Total Pipeline",v:cands.length,c:"#1e293b"},{l:"Active",v:active,c:"#0d9488"},{l:"Hired",v:hired,c:"#059669"},{l:"Rejected",v:rejected,c:"#dc2626"}].map(m=>
+        <div key={m.l} className="metric-card"><div className="num" style={{color:m.c}}>{m.v}</div><div className="lbl">{m.l}</div></div>
+      )}
+    </div>
+  </div>);
+}
+
+// ─── INTAKE ───
+function Intake({role}){
+  const qs=genQuestions(role);
+  const [ans,setAns]=useState(qs.map(()=>""));
+  return(<div>
+    <div className="section"><div className="section-header" style={{background:"#0d9488"}}>Pre-Meeting Questions</div>
+      {qs.map((q,i)=><div key={i} style={{padding:"12px 16px",borderBottom:"1px solid #f1f5f9",display:"flex",gap:12}}>
+        <span style={{width:28,height:28,background:"#f0fdfa",color:"#0d9488",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}}>{i+1}</span>
+        <div style={{flex:1}}><p style={{fontSize:14,color:"#1e293b",marginBottom:6}}>{q}</p>
+          <textarea className="form-textarea" style={{height:48}} value={ans[i]} onChange={e=>{const a=[...ans];a[i]=e.target.value;setAns(a)}} placeholder="Notes..." />
+        </div>
+      </div>)}
+    </div>
+    <div className="section"><div className="section-header" style={{background:"#0d9488"}}>Meeting Agenda (30 min)</div>
+      {[{t:"Block 1: Align on Role Priorities",time:"10 min",items:["Walk through the job spec — does it match?","Rank the top 3 must-haves.","Define 'great' at 6 months."]},
+        {t:"Block 2: Candidate Profile & Anti-Patterns",time:"10 min",items:["Ideal candidate background?","Dealbreakers from past interviews?","Key soft skills?"]},
+        {t:"Block 3: Process & Timeline",time:"10 min",items:["Confirm interview panel.","Set target dates.","Communication cadence.","Identify blockers."]}
+      ].map(b=><div key={b.t} style={{padding:"12px 16px",borderBottom:"1px solid #f1f5f9"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
+          <span style={{background:"#f0fdfa",color:"#0d9488",padding:"2px 10px",borderRadius:4,fontSize:12,fontWeight:700}}>{b.time}</span>
+          <strong style={{fontSize:14}}>{b.t}</strong>
+        </div>
+        {b.items.map((it,j)=><div key={j} className="bullet"><span className="bullet-icon teal">•</span>{it}</div>)}
+      </div>)}
+    </div>
+  </div>);
+}
+
+// ─── JD ───
+function JD({role}){
+  const jd=genJD(role);
+  const Sec=({title,bg,children})=><div className="section"><div className="section-header" style={{background:bg||"#1e293b"}}>{title}</div><div className="section-body">{children}</div></div>;
+  return(<div>
+    <Sec title="Role Details"><div>{[["Company",role.company],["Department",role.department],["Hiring Manager",role.hiringManager],["Level",role.level],["Location",role.location||"TBD"]].map(([l,v])=><div key={l} className="kv-row"><span className="kv-label">{l}:</span><span className="kv-value">{v}</span></div>)}</div></Sec>
+    <Sec title="Role Summary"><p>{jd.summary}</p></Sec>
+    <Sec title="Key Responsibilities">{jd.resp.map((r,i)=><div key={i} className="bullet"><span className="bullet-icon" style={{color:"#94a3b8"}}>•</span>{r}</div>)}</Sec>
+    <Sec title="Must-Have Qualifications">{jd.must.map((r,i)=><div key={i} className="bullet"><span className="bullet-icon green">✓</span>{r}</div>)}</Sec>
+    <Sec title="Nice-to-Have">{jd.nice.map((r,i)=><div key={i} className="bullet"><span className="bullet-icon amber">○</span>{r}</div>)}</Sec>
+  </div>);
+}
+
+// ─── MATRIX ───
+function Matrix({role}){
+  const mx=genMatrix(role);
+  const comps=genComps(role);
+  const ti=LEVELS.findIndex(l=>l.id===role.level);
+  return(<div>
+    <div className="section"><div className="section-header" style={{background:"#6d28d9"}}>Interview Panel & Stages</div>
+      <div className="table-wrap"><table><thead><tr>{["Stage","Interviewer","Duration","Competencies","Format","Weight"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+        <tbody>{mx.map((m,i)=><tr key={i}><td><strong style={{color:"#6d28d9"}}>{m.stage}</strong></td><td>{m.who}</td><td><span style={{background:"#f3e8ff",color:"#7c3aed",padding:"2px 8px",borderRadius:4,fontSize:12,fontWeight:600}}>{m.dur}</span></td><td style={{color:"#64748b"}}>{m.comp}</td><td style={{color:"#64748b"}}>{m.fmt}</td><td style={{fontWeight:600}}>{m.wt}</td></tr>)}</tbody>
+      </table></div>
+    </div>
+    <div className="section"><div className="section-header" style={{background:"#6d28d9"}}>Competency × Level Matrix<br/><span style={{fontWeight:400,fontSize:11,opacity:.7}}>IC: L3–L6 | Management: L7–L9 | Hiring at {role.level}</span></div>
+      <div className="table-wrap"><table className="matrix-table"><thead><tr><th style={{textAlign:"left",width:140}}>Competency</th>
+        {LEVELS.map((l,i)=><th key={l.id} className={i===ti?"target-col":""}>{l.id}<br/><span style={{fontWeight:400}}>{l.title}</span></th>)}</tr></thead>
+        <tbody>{comps.map((comp,ci)=><tr key={ci}><td style={{fontWeight:700,color:"#475569",background:"#f8fafc"}}>{comp.name}</td>
+          {LEVELS.map((l,li)=><td key={l.id} className={li===ti?"target-col":""} style={{fontSize:11,color:"#64748b",background:li===ti?"#f0fdfa":ci%2===0?"#fff":"#f8fafc"}}>
+            {li===ti?comp.signal:li<ti?(li===ti-1?"Developing toward senior expectations. Needs some guidance.":"Learning fundamentals. Requires mentorship and direction."):(li<=5?"Sets standards and drives practices across the org.":"Defines strategy and vision at the organizational level.")}
+          </td>)}
+        </tr>)}</tbody>
+      </table></div>
+      <div className="target-note">▲ {role.level} ({LEVELS[ti]?.title}) is the target hire level. That column defines the hiring bar.</div>
+    </div>
+  </div>);
+}
+
+// ─── SCORECARD ───
+function Scorecard({role}){
+  const comps=genComps(role);
+  const [scores,setScores]=useState(comps.map(()=>({r:0,n:""})));
+  const [dec,setDec]=useState("");const [sum,setSum]=useState("");
+  const rated=scores.filter(s=>s.r>0);
+  const avg=rated.length?(rated.reduce((a,s)=>a+s.r,0)/rated.length).toFixed(1):"—";
+  const rc={1:"r1",2:"r2",3:"r3",4:"r4"};
+  const dl={1:"Strong No",2:"Lean No",3:"Lean Yes",4:"Strong Yes"};
+  return(<div>
+    <div className="section"><div className="section-header" style={{background:"#dc2626"}}>Interview Details</div>
+      <div className="section-body"><div className="form-grid">
+        {["Candidate Name","Interviewer","Interview Stage","Date"].map(f=><div key={f}><label className="form-label">{f}</label><input className="form-input" placeholder={f}/></div>)}
+      </div></div>
+    </div>
+    <div className="scale-bar">
+      {[[1,"#ef4444","Strong No"],[2,"#f59e0b","Lean No"],[3,"#14b8a6","Lean Yes"],[4,"#10b981","Strong Yes"]].map(([n,c,l])=>
+        <div key={n} className="scale-item" style={{background:n<=2?"#fef2f2":"#f0fdf4"}}><div className="scale-num" style={{background:c}}>{n}</div><div className="scale-label">{l}</div></div>
+      )}
+    </div>
+    {comps.map((comp,i)=><div key={i} className="comp-card">
+      <div className="comp-header"><div><div className="comp-title">{comp.name}</div><div className="comp-signal">{comp.signal}</div></div>
+        <div className="rating-btns">{[1,2,3,4].map(n=><button key={n} className={`rating-btn ${scores[i].r===n?rc[n]:""}`} onClick={()=>{const s=[...scores];s[i]={...s[i],r:n};setScores(s)}}>{n}</button>)}</div>
+      </div>
+      <textarea className="comp-notes" rows={2} value={scores[i].n} onChange={e=>{const s=[...scores];s[i]={...s[i],n:e.target.value};setScores(s)}} placeholder="Evidence and notes..." />
+    </div>)}
+    <div className="section" style={{border:"2px solid #1e293b"}}>
+      <div className="section-header" style={{background:"#1e293b",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <span>Overall Recommendation</span><span style={{fontSize:22,fontWeight:800,color:"#5eead4"}}>{avg}</span>
+      </div>
+      <div className="section-body">
+        <label className="form-label">Hire Decision</label>
+        <div className="decision-btns" style={{marginBottom:12}}>
+          {Object.entries(dl).map(([k,v])=><button key={k} className={`decision-btn ${dec===v?"sel-"+k:""}`} onClick={()=>setDec(v)}>{v}</button>)}
+        </div>
+        <label className="form-label">Summary & Key Evidence</label>
+        <textarea className="form-textarea" style={{height:80}} value={sum} onChange={e=>setSum(e.target.value)} placeholder="2-3 sentences: What stood out? What gave you pause?" />
+      </div>
+    </div>
+  </div>);
+}
+
+// ─── PREP GUIDE ───
+function Prep({role}){
+  const guide=genPrep(role);
+  return(<div>
+    <div style={{background:"linear-gradient(135deg,#059669,#0d9488)",borderRadius:16,padding:24,color:"#fff",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:800,marginBottom:4}}>Welcome to the Interview Process</h2>
+      <p style={{opacity:.8,fontSize:13}}>at {role.company}</p>
+      <p style={{opacity:.9,fontSize:14,marginTop:8,lineHeight:1.6}}>We believe great interviews are a two-way street. This guide helps you show up confident and prepared.</p>
+    </div>
+    <div className="timeline">{guide.map(s=><div key={s.num} className="timeline-card" style={{background:s.color}}><div className="num">{s.num}</div><div className="name">{s.stage}</div><div className="dur">{s.dur}</div></div>)}</div>
+    {guide.map((st,si)=><div key={si} className="section">
+      <div className="stage-banner" style={{background:st.color}}><h3>Stage {st.num}: {st.stage}</h3><div className="stage-meta"><span>{st.dur}</span><span>{st.who}</span></div></div>
+      {st.sections.map((sec,j)=><div key={j} className="prep-row"><span className="prep-icon">›</span><div><div className="prep-label">{sec.l}</div><div className="prep-content">{sec.c}</div></div></div>)}
+    </div>)}
+    <div className="section"><div className="section-header" style={{background:"#1e293b"}}>General Tips</div>
+      {[["Ask questions","Interviewers genuinely want to answer them."],["Think out loud","We care about your reasoning, not just the answer."],["It's okay to say 'I don't know'","Show how you work through uncertainty."],["Be specific","Real examples beat hypothetical answers."],["Take your time","A focused 60-second answer beats a rambling 3-minute one."]].map(([t,d],i)=>
+        <div key={i} className="tip-row"><span className="tip-check">✓</span><div><strong style={{fontSize:13}}>{t}</strong><span style={{fontSize:13,color:"#64748b"}}> — {d}</span></div></div>
+      )}
+    </div>
+  </div>);
+}
+
+// ─── TRACKER ───
+function Tracker({role,cands,setCands}){
+  const [show,setShow]=useState(false);
+  const [nf,setNf]=useState({name:"",email:"",source:"",stage:"Sourced",status:"Active",dateSourced:new Date().toISOString().slice(0,10),lastUpdated:new Date().toISOString().slice(0,10),notes:""});
+  const add=()=>{if(!nf.name.trim())return;setCands([...cands,{...nf,id:Date.now()}]);setNf({name:"",email:"",source:"",stage:"Sourced",status:"Active",dateSourced:new Date().toISOString().slice(0,10),lastUpdated:new Date().toISOString().slice(0,10),notes:""});setShow(false)};
+  const upd=(id,k,v)=>setCands(cands.map(c=>c.id===id?{...c,[k]:v,lastUpdated:new Date().toISOString().slice(0,10)}:c));
+  const counts=STAGES.map(s=>({...s,count:cands.filter(c=>c.stage===s.label).length}));
+  const sc={"Active":"status-Active","Hired":"status-Hired","Rejected":"status-Rejected","On Hold":"status-OnHold","Withdrawn":"status-Withdrawn"};
+  return(<div>
+    <div className="pipeline-grid">{counts.map(s=><div key={s.key} className="pipeline-card" style={{background:s.bg,color:s.fg}}><div className="count">{s.count}</div><div className="label">{s.label}</div></div>)}</div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+      <h3 style={{fontWeight:700}}>{cands.length} Candidates</h3>
+      <button className="btn btn-sm btn-accent" onClick={()=>setShow(!show)}>+ Add Candidate</button>
+    </div>
+    {show&&<div className="add-form"><div className="add-grid">
+      <input className="form-input" value={nf.name} onChange={e=>setNf({...nf,name:e.target.value})} placeholder="Full Name *" />
+      <input className="form-input" value={nf.email} onChange={e=>setNf({...nf,email:e.target.value})} placeholder="Email" />
+      <input className="form-input" value={nf.source} onChange={e=>setNf({...nf,source:e.target.value})} placeholder="Source (LinkedIn, Referral...)" />
+    </div><div className="btn-row"><button className="btn btn-sm btn-accent" onClick={add}>Add</button><button className="btn btn-sm btn-secondary" onClick={()=>setShow(false)}>Cancel</button></div></div>}
+    {cands.length===0?<div className="empty-state"><div className="icon">📋</div><p style={{color:"#94a3b8"}}>No candidates yet. Add your first one to start tracking.</p></div>
+    :<div className="section"><div className="table-wrap"><table><thead><tr>{["Name","Source","Stage","Status","Updated","Notes"].map(h=><th key={h}>{h}</th>)}</tr></thead>
+      <tbody>{cands.map(c=><tr key={c.id}>
+        <td><strong>{c.name}</strong><br/><span style={{fontSize:11,color:"#94a3b8"}}>{c.email}</span></td>
+        <td>{c.source}</td>
+        <td><select className="form-select" style={{fontSize:12,padding:"4px 8px"}} value={c.stage} onChange={e=>upd(c.id,"stage",e.target.value)}>{STAGES.map(s=><option key={s.key} value={s.label}>{s.label}</option>)}</select></td>
+        <td><select className={`status-badge ${sc[c.status]||""}`} style={{border:"none",cursor:"pointer",fontSize:12}} value={c.status} onChange={e=>upd(c.id,"status",e.target.value)}>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select></td>
+        <td style={{fontSize:12,color:"#94a3b8"}}>{c.lastUpdated}</td>
+        <td><input style={{border:"none",borderBottom:"1px solid transparent",fontSize:12,width:"100%",outline:"none"}} value={c.notes||""} onChange={e=>upd(c.id,"notes",e.target.value)} placeholder="Add notes..." /></td>
+      </tr>)}</tbody>
+    </table></div></div>}
+  </div>);
+}
+
+// ─── STYLED EXCEL EXPORT (ExcelJS) ───
+async function exportToExcel(role, cands){
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "Recruiter Hub";
+
+  // Color palette matching openpyxl build
+  const NAVY="1B2A4A", TEAL="2E86AB", PURPLE="6C3483", DARK="1A1A1A", SUBTLE="666666";
+  const WHITE="FFFFFF", LIGHT_GRAY="F5F5F5", MID_GRAY="E0E0E0";
+  const LIGHT_GREEN="E8F5E9", LIGHT_TEAL="EAF4F8", LIGHT_AMBER="FFF8E1";
+
+  const thin = {style:"thin", color:{argb:"FF"+MID_GRAY}};
+  const borders = {top:thin,bottom:thin,left:thin,right:thin};
+  const hdrFont = {name:"Arial",size:11,bold:true,color:{argb:"FF"+WHITE}};
+  const titleFont = {name:"Arial",size:13,bold:true,color:{argb:"FF"+NAVY}};
+  const bodyFont = {name:"Arial",size:10,color:{argb:"FF"+DARK}};
+  const subtleFont = {name:"Arial",size:9,italic:true,color:{argb:"FF"+SUBTLE}};
+  const wrapTop = {wrapText:true, vertical:"top"};
+  const centerMid = {horizontal:"center", vertical:"middle"};
+
+  function makeHeader(ws, row, cols, bg){
+    const bgColor = bg || TEAL;
+    cols.forEach((val,i) => {
+      const c = ws.getRow(row).getCell(i+1);
+      c.value = val;
+      c.font = {name:"Arial",size:10,bold:true,color:{argb:"FF"+WHITE}};
+      c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FF"+bgColor}};
+      c.border = borders;
+      c.alignment = {horizontal:"center",vertical:"middle",wrapText:true};
+    });
+    ws.getRow(row).height = 28;
+  }
+  function sectionTitle(ws, row, text, cols, bg){
+    ws.mergeCells(row, 1, row, cols);
+    const c = ws.getRow(row).getCell(1);
+    c.value = text;
+    c.font = titleFont;
+    c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FF"+(bg||MID_GRAY)}};
+    c.border = borders;
+    c.alignment = {vertical:"middle"};
+    ws.getRow(row).height = 30;
+  }
+  function kvRow(ws, row, label, val, col1, col2){
+    const lc = ws.getRow(row).getCell(col1||1);
+    lc.value = label; lc.font = {name:"Arial",size:10,bold:true,color:{argb:"FF"+SUBTLE}};
+    lc.border = borders;
+    const vc = ws.getRow(row).getCell(col2||2);
+    vc.value = val; vc.font = bodyFont; vc.border = borders;
+  }
+  function bodyCell(ws, row, col, val, opts){
+    const c = ws.getRow(row).getCell(col);
+    c.value = val;
+    c.font = opts?.font || bodyFont;
+    c.border = borders;
+    c.alignment = opts?.align || wrapTop;
+    if(opts?.fill) c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FF"+opts.fill}};
+  }
+
+  // ══════════════════════════════════════════════════════
+  // 1. DASHBOARD
+  // ══════════════════════════════════════════════════════
+  const ws1 = wb.addWorksheet("Dashboard", {properties:{tabColor:{argb:"FF1B2A4A"}}});
+  ws1.columns = [{width:24},{width:22},{width:4},{width:20},{width:24}];
+  let r = 1;
+  sectionTitle(ws1, r, "RECRUITER HUB — DASHBOARD", 5, NAVY);
+  ws1.getRow(r).getCell(1).font = {name:"Arial",size:13,bold:true,color:{argb:"FF"+WHITE}};
+  r += 2;
+  kvRow(ws1, r, "Role:", role.title); kvRow(ws1, r, "Company:", role.company, 4, 5); r++;
+  kvRow(ws1, r, "Department:", role.department); kvRow(ws1, r, "Hiring Manager:", role.hiringManager, 4, 5); r++;
+  kvRow(ws1, r, "Level:", role.level); kvRow(ws1, r, "Location:", role.location||"—", 4, 5);
+  r += 2;
+  sectionTitle(ws1, r, "Pipeline Snapshot", 5, TEAL); r++;
+  makeHeader(ws1, r, ["Stage","Count","","",""], TEAL); r++;
+  STAGES.forEach(st => {
+    const count = cands.filter(c=>c.stage===st.label).length;
+    bodyCell(ws1, r, 1, st.label, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+    bodyCell(ws1, r, 2, count, {align:centerMid, font:{name:"Arial",size:12,bold:true,color:{argb:"FF"+TEAL}}});
+    ws1.getRow(r).height = 22; r++;
+  });
+  r++;
+  sectionTitle(ws1, r, "Summary Metrics", 5, NAVY); r++;
+  const metrics = [["Total Pipeline",cands.length],["Active",cands.filter(c=>c.status==="Active").length],["Hired",cands.filter(c=>c.status==="Hired").length],["Rejected",cands.filter(c=>c.status==="Rejected").length]];
+  metrics.forEach(([label,val]) => {
+    bodyCell(ws1, r, 1, label, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+    const color = label==="Hired"?"059669":label==="Rejected"?"DC2626":label==="Active"?"0D9488":NAVY;
+    bodyCell(ws1, r, 2, val, {align:centerMid, font:{name:"Arial",size:14,bold:true,color:{argb:"FF"+color}}});
+    ws1.getRow(r).height = 24; r++;
+  });
+
+  // ══════════════════════════════════════════════════════
+  // 2. INTAKE MEETING
+  // ══════════════════════════════════════════════════════
+  const ws2 = wb.addWorksheet("Intake Meeting", {properties:{tabColor:{argb:"FF0D9488"}}});
+  ws2.columns = [{width:6},{width:50},{width:36},{width:18},{width:16}];
+  r = 1;
+  sectionTitle(ws2, r, "INTAKE MEETING — " + role.title, 5, "0D9488"); r += 2;
+  kvRow(ws2, r, "Role:", role.title); kvRow(ws2, r, "Hiring Manager:", role.hiringManager, 4, 5); r++;
+  kvRow(ws2, r, "Department:", role.department); kvRow(ws2, r, "Level:", role.level, 4, 5);
+  r += 2;
+  sectionTitle(ws2, r, "Discussion Questions", 5, "0D9488"); r++;
+  makeHeader(ws2, r, ["#","Question","Notes / Answers","",""], "0D9488"); r++;
+  genQuestions(role).forEach((q, i) => {
+    bodyCell(ws2, r, 1, i+1, {align:centerMid}); bodyCell(ws2, r, 2, q); bodyCell(ws2, r, 3, "", {fill:LIGHT_TEAL});
+    ws2.getRow(r).height = 28; r++;
+  });
+  r++;
+  sectionTitle(ws2, r, "Action Items", 5, NAVY); r++;
+  makeHeader(ws2, r, ["#","Action","Owner","Due Date","Status"], NAVY); r++;
+  for(let i=0;i<5;i++){bodyCell(ws2,r,1,i+1,{align:centerMid});bodyCell(ws2,r,2,"");bodyCell(ws2,r,3,"");bodyCell(ws2,r,4,"");bodyCell(ws2,r,5,"");ws2.getRow(r).height=24;r++;}
+
+  // ══════════════════════════════════════════════════════
+  // 3. JOB SPECIFICATION
+  // ══════════════════════════════════════════════════════
+  const ws3 = wb.addWorksheet("Job Specification", {properties:{tabColor:{argb:"FF334155"}}});
+  ws3.columns = [{width:5},{width:55},{width:5},{width:20},{width:24}];
+  r = 1;
+  sectionTitle(ws3, r, "JOB SPECIFICATION — " + role.title, 5, "334155"); r += 2;
+  kvRow(ws3, r, "Role:", role.title); kvRow(ws3, r, "Level:", role.level, 4, 5); r++;
+  kvRow(ws3, r, "Company:", role.company); kvRow(ws3, r, "Department:", role.department, 4, 5); r++;
+  kvRow(ws3, r, "Hiring Manager:", role.hiringManager); kvRow(ws3, r, "Location:", role.location||"—", 4, 5);
+  r += 2;
+  const jd = genJD(role);
+  sectionTitle(ws3, r, "Role Summary", 5, "334155"); r++;
+  ws3.mergeCells(r, 1, r, 5);
+  ws3.getRow(r).getCell(1).value = jd.summary;
+  ws3.getRow(r).getCell(1).font = bodyFont;
+  ws3.getRow(r).getCell(1).alignment = wrapTop;
+  ws3.getRow(r).height = 40; r += 2;
+
+  sectionTitle(ws3, r, "Key Responsibilities", 5, "0D9488"); r++;
+  jd.resp.forEach((item, i) => {
+    bodyCell(ws3, r, 1, i+1, {align:centerMid});
+    ws3.mergeCells(r, 2, r, 5);
+    bodyCell(ws3, r, 2, item);
+    ws3.getRow(r).height = 22; r++;
+  });
+  r++;
+  sectionTitle(ws3, r, "Must-Have Qualifications", 5, "059669"); r++;
+  jd.must.forEach((item, i) => {
+    bodyCell(ws3, r, 1, i+1, {align:centerMid});
+    ws3.mergeCells(r, 2, r, 5);
+    bodyCell(ws3, r, 2, item, {fill:LIGHT_GREEN});
+    ws3.getRow(r).height = 22; r++;
+  });
+  r++;
+  sectionTitle(ws3, r, "Nice-to-Have", 5, "F59E0B"); r++;
+  jd.nice.forEach((item, i) => {
+    bodyCell(ws3, r, 1, i+1, {align:centerMid});
+    ws3.mergeCells(r, 2, r, 5);
+    bodyCell(ws3, r, 2, item, {fill:LIGHT_AMBER});
+    ws3.getRow(r).height = 22; r++;
+  });
+
+  // ══════════════════════════════════════════════════════
+  // 4. INTERVIEW MATRIX
+  // ══════════════════════════════════════════════════════
+  const ws4 = wb.addWorksheet("Interview Matrix", {properties:{tabColor:{argb:"FF7C3AED"}}});
+  ws4.columns = [{width:26},{width:18},{width:12},{width:28},{width:26},{width:10}];
+  r = 1;
+  sectionTitle(ws4, r, "INTERVIEW MATRIX — " + role.title, 6, PURPLE); r += 2;
+  sectionTitle(ws4, r, "Interview Stages", 6, PURPLE); r++;
+  makeHeader(ws4, r, ["Stage","Interviewer","Duration","Competencies Assessed","Format","Weight"], PURPLE); r++;
+  const matrix = genMatrix(role);
+  matrix.forEach((m, i) => {
+    bodyCell(ws4, r, 1, m.stage, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+PURPLE}}});
+    bodyCell(ws4, r, 2, m.who);
+    bodyCell(ws4, r, 3, m.dur, {align:centerMid, fill:"F3E8FF"});
+    bodyCell(ws4, r, 4, m.comp);
+    bodyCell(ws4, r, 5, m.fmt);
+    bodyCell(ws4, r, 6, m.wt, {align:centerMid, font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+    ws4.getRow(r).height = 26; r++;
+  });
+
+  // Skill matrix section
+  r += 2;
+  sectionTitle(ws4, r, "Skill Matrix — Coverage by Interview Stage", 6, MID_GRAY);
+  ws4.getRow(r).getCell(1).font = {name:"Arial",size:11,bold:true,color:{argb:"FF"+NAVY}};
+  r++;
+  ws4.mergeCells(r, 1, r, 6);
+  ws4.getRow(r).getCell(1).value = "P = Primary focus    S = Secondary/supporting    — = Not assessed";
+  ws4.getRow(r).getCell(1).font = subtleFont; r++;
+
+  const skillHeaders = ["Skill / Competency","Screening","Phone Interview","Technical Round","HM Round","Final / Panel"];
+  makeHeader(ws4, r, skillHeaders, TEAL); r++;
+
+  const skills = [
+    {cat:"TECHNICAL SKILLS"},
+    {n:"Backend Languages (Java, Python, Go, C#)",v:["S","P","P","—","—"]},
+    {n:"REST API / gRPC Design",v:["S","S","P","—","—"]},
+    {n:"System Design & Architecture",v:["—","S","P","S","—"]},
+    {n:"Database Design & Query Optimization",v:["—","S","P","—","—"]},
+    {n:"Cloud Platforms (AWS / Azure / GCP)",v:["S","—","S","S","—"]},
+    {n:"CI/CD & DevOps Practices",v:["—","—","S","S","—"]},
+    {n:"Monitoring, Alerting & Incident Response",v:["—","—","S","P","—"]},
+    {n:"Data Pipelines & Integrations",v:["—","—","S","S","—"]},
+    {n:"Security & Compliance Awareness",v:["—","—","—","S","S"]},
+    {cat:"BEHAVIORAL & LEADERSHIP SKILLS"},
+    {n:"Communication & Clarity",v:["P","S","S","P","P"]},
+    {n:"Problem Decomposition",v:["—","P","P","S","—"]},
+    {n:"Ownership & Accountability",v:["S","—","S","P","S"]},
+    {n:"Collaboration & Teamwork",v:["S","—","—","P","P"]},
+    {n:"Mentorship & Knowledge Sharing",v:["—","—","—","S","P"]},
+    {n:"Conflict Resolution & Feedback",v:["—","—","—","P","S"]},
+    {n:"Growth Mindset & Learning Agility",v:["S","S","—","S","P"]},
+    {n:"Strategic & Product Thinking",v:["—","—","S","S","P"]},
+    {cat:"ROLE & CULTURE FIT"},
+    {n:"Motivation & Role Fit",v:["P","—","—","S","S"]},
+    {n:"Financial Services / Fintech Context",v:["S","—","S","S","S"]},
+    {n:"Culture & Values Alignment",v:["S","—","—","S","P"]},
+    {n:"Logistics (Location, Timeline, Comp)",v:["P","—","—","—","S"]},
+  ];
+  skills.forEach(sk => {
+    if(sk.cat){
+      ws4.mergeCells(r, 1, r, 6);
+      const c = ws4.getRow(r).getCell(1);
+      c.value = sk.cat;
+      c.font = {name:"Arial",size:10,bold:true,color:{argb:"FF"+PURPLE}};
+      c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FFD5D5D5"}};
+      c.border = borders;
+      ws4.getRow(r).height = 24; r++;
+    } else {
+      bodyCell(ws4, r, 1, sk.n);
+      sk.v.forEach((val, i) => {
+        const cell = ws4.getRow(r).getCell(i+2);
+        cell.value = val; cell.alignment = centerMid; cell.border = borders;
+        if(val === "P"){ cell.font = {name:"Arial",size:10,bold:true,color:{argb:"FF1B7A3D"}}; cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FF"+LIGHT_GREEN}}; }
+        else if(val === "S"){ cell.font = {name:"Arial",size:10,color:{argb:"FF"+TEAL}}; cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FF"+LIGHT_TEAL}}; }
+        else { cell.font = {name:"Arial",size:10,color:{argb:"FFBBBBBB"}}; }
+      });
+      ws4.getRow(r).height = 22; r++;
+    }
+  });
+
+  // ══════════════════════════════════════════════════════
+  // 5. INTERVIEW SCORECARD
+  // ══════════════════════════════════════════════════════
+  const ws5 = wb.addWorksheet("Interview Scorecard", {properties:{tabColor:{argb:"FFDC2626"}}});
+  ws5.columns = [{width:28},{width:50},{width:14},{width:40}];
+  r = 1;
+  sectionTitle(ws5, r, "INTERVIEW SCORECARD — " + role.title, 4, "DC2626"); r += 2;
+  ws5.mergeCells(r, 1, r, 4);
+  ws5.getRow(r).getCell(1).value = "1 = Strong No  |  2 = Lean No  |  3 = Lean Yes  |  4 = Strong Yes";
+  ws5.getRow(r).getCell(1).font = {name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}};
+  ws5.getRow(r).getCell(1).alignment = centerMid;
+  ws5.getRow(r).getCell(1).fill = {type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF8E1"}};
+  ws5.getRow(r).getCell(1).border = borders;
+  ws5.getRow(r).height = 28; r += 2;
+
+  makeHeader(ws5, r, ["Competency","Signal — What to Look For","Rating (1-4)","Evidence & Notes"], "DC2626"); r++;
+  const comps = genComps(role);
+  comps.forEach((c, i) => {
+    bodyCell(ws5, r, 1, c.name, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+    bodyCell(ws5, r, 2, c.signal);
+    bodyCell(ws5, r, 3, "", {align:centerMid, fill:LIGHT_AMBER});
+    bodyCell(ws5, r, 4, "", {fill:LIGHT_GRAY});
+    ws5.getRow(r).height = 36; r++;
+  });
+  r++;
+  sectionTitle(ws5, r, "Overall Recommendation", 4, NAVY); r++;
+  kvRow(ws5, r, "Average Score:", ""); bodyCell(ws5, r, 3, "", {fill:LIGHT_AMBER, align:centerMid}); r++;
+  kvRow(ws5, r, "Hire Decision:", ""); r++;
+  kvRow(ws5, r, "Summary & Key Evidence:", ""); ws5.mergeCells(r, 2, r+2, 4); ws5.getRow(r).height = 60;
+
+  // ══════════════════════════════════════════════════════
+  // 6. CANDIDATE PREP GUIDE
+  // ══════════════════════════════════════════════════════
+  const ws6 = wb.addWorksheet("Candidate Prep Guide", {properties:{tabColor:{argb:"FF059669"}}});
+  ws6.columns = [{width:6},{width:20},{width:14},{width:55}];
+  r = 1;
+  sectionTitle(ws6, r, "CANDIDATE PREP GUIDE — " + role.title + " at " + role.company, 4, "059669"); r += 2;
+  makeHeader(ws6, r, ["#","Stage","Duration","Interviewer"], "059669"); r++;
+  const prep = genPrep(role);
+  prep.forEach(p => {
+    bodyCell(ws6, r, 1, p.num, {align:centerMid}); bodyCell(ws6, r, 2, p.stage, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+    bodyCell(ws6, r, 3, p.dur, {align:centerMid}); bodyCell(ws6, r, 4, p.who);
+    ws6.getRow(r).height = 22; r++;
+  });
+  r++;
+  const stageColors = ["0D9488","2563EB","D97706","7C3AED","059669"];
+  prep.forEach((p, pi) => {
+    sectionTitle(ws6, r, "Stage " + p.num + ": " + p.stage, 4, stageColors[pi]||TEAL); r++;
+    p.sections.forEach(sec => {
+      bodyCell(ws6, r, 1, "");
+      bodyCell(ws6, r, 2, sec.l, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+      ws6.mergeCells(r, 3, r, 4);
+      bodyCell(ws6, r, 3, sec.c);
+      ws6.getRow(r).height = Math.max(22, Math.ceil(sec.c.length / 60) * 15);
+      r++;
+    });
+    r++;
+  });
+  sectionTitle(ws6, r, "General Tips", 4, NAVY); r++;
+  [["Ask questions","Interviewers genuinely want to answer them."],["Think out loud","We care about your reasoning, not just the answer."],["It's okay to say 'I don't know'","Show how you work through uncertainty."],["Be specific","Real examples beat hypothetical answers."],["Take your time","A focused 60-second answer beats a rambling 3-minute one."]].forEach(([t,d]) => {
+    bodyCell(ws6, r, 1, "✓", {align:centerMid, font:{name:"Arial",size:10,bold:true,color:{argb:"FF10B981"}}});
+    bodyCell(ws6, r, 2, t, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+    ws6.mergeCells(r, 3, r, 4);
+    bodyCell(ws6, r, 3, d); ws6.getRow(r).height = 22; r++;
+  });
+
+  // ══════════════════════════════════════════════════════
+  // 7. CANDIDATE TRACKER
+  // ══════════════════════════════════════════════════════
+  const ws7 = wb.addWorksheet("Candidate Tracker", {properties:{tabColor:{argb:"FFF97316"}}});
+  ws7.columns = [{width:22},{width:28},{width:16},{width:18},{width:12},{width:16},{width:32},{width:14}];
+  r = 1;
+  sectionTitle(ws7, r, "CANDIDATE TRACKER — " + role.title, 8, "F97316"); r += 2;
+  makeHeader(ws7, r, ["Name","Email","Phone","Stage","Status","Source","Notes","Last Updated"], "F97316"); r++;
+  if(cands.length === 0){
+    ws7.mergeCells(r, 1, r, 8);
+    ws7.getRow(r).getCell(1).value = "No candidates added yet — add candidates in the web app and re-export.";
+    ws7.getRow(r).getCell(1).font = subtleFont;
+    ws7.getRow(r).getCell(1).alignment = centerMid;
+  } else {
+    cands.forEach(c => {
+      bodyCell(ws7, r, 1, c.name, {font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+DARK}}});
+      bodyCell(ws7, r, 2, c.email||"");
+      bodyCell(ws7, r, 3, c.phone||"");
+      bodyCell(ws7, r, 4, c.stage, {align:centerMid});
+      const stFill = c.status==="Hired"?"D1FAE5":c.status==="Rejected"?"FEE2E2":c.status==="Active"?"CCFBF1":c.status==="On Hold"?"FEF3C7":LIGHT_GRAY;
+      const stColor = c.status==="Hired"?"059669":c.status==="Rejected"?"DC2626":c.status==="Active"?"0D9488":c.status==="On Hold"?"D97706":SUBTLE;
+      bodyCell(ws7, r, 5, c.status, {align:centerMid, fill:stFill, font:{name:"Arial",size:10,bold:true,color:{argb:"FF"+stColor}}});
+      bodyCell(ws7, r, 6, c.source||"");
+      bodyCell(ws7, r, 7, c.notes||"");
+      bodyCell(ws7, r, 8, c.lastUpdated||"", {align:centerMid, font:{name:"Arial",size:9,color:{argb:"FF"+SUBTLE}}});
+      ws7.getRow(r).height = 24; r++;
+    });
+  }
+
+  // ── DOWNLOAD ──
+  const buf = await wb.xlsx.writeBuffer();
+  const filename = (role.title + " - Recruiter Hub").replace(/[^a-zA-Z0-9 \-]/g,"") + ".xlsx";
+  saveAs(new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"}), filename);
+}
+
+// ─── MAIN APP ───
+function App(){
+  const [role,setRole]=useState(null);
+  const [sessionId,setSessionId]=useState(null);
+  const [tab,setTab]=useState("dashboard");
+  const [cands,setCands]=useState([]);
+  const [saveFlash,setSaveFlash]=useState(false);
+
+  // Auto-save whenever role or cands change
+  React.useEffect(()=>{
+    if(!role||!sessionId) return;
+    const timer = setTimeout(()=>{
+      saveSession({...role, _sessionId: sessionId}, cands);
+      setSaveFlash(true);
+      setTimeout(()=>setSaveFlash(false), 1500);
+    }, 1000);
+    return ()=>clearTimeout(timer);
+  }, [role, cands, sessionId]);
+
+  const handleNewRole = (formData) => {
+    const id = Date.now().toString();
+    setSessionId(id);
+    setRole(formData);
+    setCands([]);
+    setTab("dashboard");
+    // Save immediately
+    saveSession({...formData, _sessionId: id}, []);
+  };
+
+  const handleLoadSession = (session) => {
+    setSessionId(session.id);
+    setRole(session.role);
+    setCands(session.cands || []);
+    setTab("dashboard");
+  };
+
+  if(!role) return <SetupForm onSubmit={handleNewRole} onLoadSession={handleLoadSession}/>;
+
+  const TABS=[
+    {id:"dashboard",label:"Dashboard",icon:"◉",bg:"linear-gradient(135deg,#334155,#1e293b)"},
+    {id:"intake",label:"Intake Meeting",icon:"◈",bg:"linear-gradient(135deg,#0d9488,#0f766e)"},
+    {id:"jd",label:"Job Spec",icon:"◇",bg:"linear-gradient(135deg,#475569,#334155)"},
+    {id:"matrix",label:"Interview Matrix",icon:"◆",bg:"linear-gradient(135deg,#7c3aed,#6d28d9)"},
+    {id:"scorecard",label:"Scorecard",icon:"◐",bg:"linear-gradient(135deg,#dc2626,#b91c1c)"},
+    {id:"prep",label:"Candidate Prep",icon:"◑",bg:"linear-gradient(135deg,#059669,#047857)"},
+    {id:"tracker",label:"Tracker",icon:"◒",bg:"linear-gradient(135deg,#f97316,#ea580c)"},
+  ];
+  const active=TABS.find(t=>t.id===tab);
+  const views={dashboard:<Dashboard role={role} cands={cands}/>,intake:<Intake role={role}/>,jd:<JD role={role}/>,matrix:<Matrix role={role}/>,scorecard:<Scorecard role={role}/>,prep:<Prep role={role}/>,tracker:<Tracker role={role} cands={cands} setCands={setCands}/>};
+  return(<div>
+    <div className="app-topbar">
+      <div style={{display:"flex",alignItems:"center"}}><span className="app-logo">◉ Recruiter Hub</span><span className="app-meta">{role.title} · {role.company}</span></div>
+      <div className="btn-row">
+        <button className="btn btn-sm" style={{background:"#059669",color:"#fff"}} onClick={()=>exportToExcel(role,cands)}>⬇ Download Excel</button>
+        <button className="btn btn-sm btn-dark" onClick={()=>{setRole(null);setSessionId(null);setTab("dashboard")}}>← All Roles</button>
+      </div>
+    </div>
+    <div className="tab-bar">{TABS.map(t=><button key={t.id} className={`tab-btn ${tab===t.id?"active":""}`} onClick={()=>setTab(t.id)}>{t.icon} {t.label}</button>)}</div>
+    <div className="content">
+      <div className="page-banner" style={{background:active.bg}}><h2>{active.label}</h2><p>{role.title} — {role.company}</p></div>
+      {views[tab]}
+    </div>
+    <div className={`autosave-badge ${saveFlash?"show":""}`}>✓ Session saved</div>
+  </div>);
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+</script>
+</body>
+</html>
