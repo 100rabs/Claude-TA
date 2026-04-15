@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecruiterKeys — Settings</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #111113;
+      color: #e5e5e5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.5;
+    }
+
+    .settings-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* Header */
+    .settings-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .settings-logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #7c5cff, #a78bfa);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .settings-title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .settings-subtitle {
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* Navigation Tabs */
+    .settings-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 28px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 4px;
+    }
+
+    .settings-tab {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .settings-tab:hover {
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .settings-tab.active {
+      color: #fff;
+      background: rgba(124, 92, 255, 0.15);
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-heading {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .section-desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 16px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: rgba(124, 92, 255, 0.4);
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: rgba(255,255,255,0.2);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .form-select {
+      cursor: pointer;
+    }
+
+    .form-select option {
+      background: #1c1c1e;
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: rgba(255,255,255,0.25);
+      margin-top: 4px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Toggle */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .toggle-label {
+      font-size: 14px;
+    }
+
+    .toggle-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch.active {
+      background: #7c5cff;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(20px);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: #7c5cff;
+      color: #fff;
+    }
+    .btn-primary:hover { background: #6b4ee6; }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.7);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.12);
+      color: #f87171;
+    }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+
+    .btn-success {
+      background: rgba(52, 211, 153, 0.12);
+      color: #6ee7b7;
+    }
+    .btn-success:hover { background: rgba(52, 211, 153, 0.2); }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* Role Profile Card */
+    .role-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .role-profile-card {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .role-profile-card:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    .role-profile-card.active {
+      border-color: rgba(124, 92, 255, 0.3);
+      background: rgba(124, 92, 255, 0.06);
+    }
+
+    .role-card-info {
+      flex: 1;
+    }
+
+    .role-card-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .role-card-meta {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .role-card-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .role-card-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.5);
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .role-card-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    .role-active-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      background: rgba(52, 211, 153, 0.12);
+      color: #6ee7b7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Snippet list */
+    .snippet-item {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 8px;
+    }
+
+    .snippet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .snippet-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .snippet-meta {
+      font-size: 11px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .snippet-preview {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      max-height: 60px;
+      overflow: hidden;
+    }
+
+    /* Status message */
+    .status-msg {
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+    .status-msg.success {
+      display: block;
+      background: rgba(52, 211, 153, 0.1);
+      color: #6ee7b7;
+    }
+    .status-msg.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-header">
+      <div class="settings-logo">⌨️</div>
+      <div>
+        <div class="settings-title">RecruiterKeys Settings</div>
+        <div class="settings-subtitle">Configure your message engine, role profiles, and preferences</div>
+      </div>
+    </div>
+
+    <div class="settings-tabs">
+      <button class="settings-tab active" data-tab="company">Company</button>
+      <button class="settings-tab" data-tab="roles">Role Profiles</button>
+      <button class="settings-tab" data-tab="preferences">Preferences</button>
+      <button class="settings-tab" data-tab="snippets">Snippets</button>
+      <button class="settings-tab" data-tab="shortcuts">Custom Shortcuts</button>
+      <button class="settings-tab" data-tab="data">Import/Export</button>
+    </div>
+
+    <!-- Company Tab -->
+    <div class="tab-panel active" data-panel="company">
+      <div class="section">
+        <div class="section-heading">Company Information</div>
+        <div class="section-desc">This information is used across all message templates.</div>
+
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input class="form-input" id="companyName" type="text" placeholder="e.g., Acme Corp" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Company Description (one line)</label>
+          <input class="form-input" id="companyDescription" type="text" placeholder="e.g., We're a Series B fintech company building the future of payments." />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Employer Value Proposition (EVP)</label>
+          <textarea class="form-textarea" id="companyEVP" placeholder="What makes your company a great place to work? This gets woven into outreach messages."></textarea>
+          <div class="form-hint">Tip: Write this conversationally, not as corporate copy. It should sound like something a real person would say.</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">Email Signature</div>
+        <div class="section-desc">Appended to messages where {signature} is used.</div>
+
+        <div class="form-group">
+          <textarea class="form-textarea" id="signature" placeholder="e.g.,&#10;Sarah Chen&#10;Senior Technical Recruiter&#10;Acme Corp&#10;sarah@acme.com | (555) 123-4567"></textarea>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" id="saveCompany">Save Company Settings</button>
+      </div>
+      <div class="status-msg" id="companyStatus"></div>
+    </div>
+
+    <!-- Role Profiles Tab -->
+    <div class="tab-panel" data-panel="roles">
+      <div class="section">
+        <div class="section-heading">Role Profiles</div>
+        <div class="section-desc">Create profiles for each role you're recruiting for. The active role provides context for all generated messages.</div>
+
+        <div class="role-list" id="roleList"></div>
+
+        <button class="btn btn-secondary" id="addRole">+ Add New Role Profile</button>
+      </div>
+
+      <!-- Role Edit Form (hidden by default) -->
+      <div class="section" id="roleForm" style="display: none;">
+        <div class="section-heading" id="roleFormTitle">New Role Profile</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Job Title *</label>
+            <input class="form-input" id="roleTitle" type="text" placeholder="e.g., Senior Software Engineer" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Team / Department</label>
+            <input class="form-input" id="roleTeam" type="text" placeholder="e.g., Platform Engineering" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Hiring Manager</label>
+            <input class="form-input" id="roleHiringManager" type="text" placeholder="e.g., Alex Rivera" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location / Remote Policy</label>
+            <input class="form-input" id="roleLocation" type="text" placeholder="e.g., Remote US / Hybrid NYC" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Key Responsibilities (2–3 bullet summary)</label>
+          <textarea class="form-textarea" id="roleResponsibilities" placeholder="e.g.,&#10;Lead the design and implementation of core platform services&#10;Mentor junior engineers and drive technical best practices&#10;Collaborate with product teams to define technical roadmap"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Required Qualifications</label>
+            <textarea class="form-textarea" id="roleRequiredQuals" placeholder="e.g., 5+ years backend development, experience with distributed systems" style="min-height: 80px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Qualifications</label>
+            <textarea class="form-textarea" id="rolePreferredQuals" placeholder="e.g., Experience with Kubernetes, Go or Rust" style="min-height: 80px;"></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Compensation Range (optional)</label>
+            <input class="form-input" id="roleCompensation" type="text" placeholder="e.g., $180K–$220K + equity" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Default Tone</label>
+            <select class="form-select" id="roleTone">
+              <option value="professional">Professional</option>
+              <option value="conversational">Conversational</option>
+              <option value="bold">Bold / Creative</option>
+              <option value="executive">Executive</option>
+              <option value="empathetic">Empathetic</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Key Selling Points</label>
+          <textarea class="form-textarea" id="roleSellingPoints" placeholder="e.g., Working on tech that powers 50M+ transactions daily, small team with outsized impact, strong engineering culture, generous equity" style="min-height: 80px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Interview Process Overview</label>
+          <textarea class="form-textarea" id="roleInterviewProcess" placeholder="e.g., Phone screen (30 min) → Technical interview (90 min) → System design (60 min) → Culture fit with team (45 min). Total timeline: 2–3 weeks." style="min-height: 80px;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Scheduling Link</label>
+          <input class="form-input" id="roleSchedulingLink" type="text" placeholder="e.g., https://calendly.com/yourname/30min" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Office Address (for in-person interviews)</label>
+          <input class="form-input" id="roleOfficeAddress" type="text" placeholder="e.g., 123 Main St, Suite 400, San Francisco, CA 94105" />
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="saveRole">Save Role Profile</button>
+          <button class="btn btn-secondary" id="cancelRole">Cancel</button>
+          <button class="btn btn-danger" id="deleteRole" style="display: none;">Delete</button>
+        </div>
+        <div class="status-msg" id="roleStatus"></div>
+      </div>
+    </div>
+
+    <!-- Preferences Tab -->
+    <div class="tab-panel" data-panel="preferences">
+      <div class="section">
+        <div class="section-heading">General Preferences</div>
+
+        <div class="form-group">
+          <label class="form-label">Default Tone</label>
+          <select class="form-select" id="globalTone">
+            <option value="professional">Professional</option>
+            <option value="conversational">Conversational</option>
+            <option value="bold">Bold / Creative</option>
+            <option value="executive">Executive</option>
+            <option value="empathetic">Empathetic</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Default Channel</label>
+          <select class="form-select" id="defaultChannel">
+            <option value="email">Email</option>
+            <option value="inmail">LinkedIn InMail</option>
+            <option value="linkedin">LinkedIn Message</option>
+            <option value="whatsapp">WhatsApp / SMS</option>
+            <option value="ats">ATS Notes</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Trigger Key</label>
+          <input class="form-input" id="triggerKey" type="text" maxlength="1" value="/" style="width: 80px; text-align: center; font-size: 18px;" />
+          <div class="form-hint">The character that triggers the command palette when typed in a text field. Default is /</div>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Show Smart Suggestions</div>
+            <div class="toggle-desc">Suggest the next message based on pipeline status</div>
+          </div>
+          <div class="toggle-switch active" id="toggleSuggestions" data-setting="showSuggestions"></div>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Include Signature</div>
+            <div class="toggle-desc">Append your email signature to generated messages</div>
+          </div>
+          <div class="toggle-switch active" id="toggleSignature" data-setting="includeSignature"></div>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Constructive Feedback in Rejections</div>
+            <div class="toggle-desc">Include brief feedback in rejection messages when available</div>
+          </div>
+          <div class="toggle-switch" id="toggleFeedback" data-setting="feedbackInRejections"></div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" id="savePreferences">Save Preferences</button>
+      </div>
+      <div class="status-msg" id="preferencesStatus"></div>
+    </div>
+
+    <!-- Snippets Tab -->
+    <div class="tab-panel" data-panel="snippets">
+      <div class="section">
+        <div class="section-heading">Saved Snippets</div>
+        <div class="section-desc">Messages you've customized and saved for reuse.</div>
+        <div id="snippetsList"></div>
+      </div>
+    </div>
+
+    <!-- Custom Shortcuts Tab -->
+    <div class="tab-panel" data-panel="shortcuts">
+      <div class="section">
+        <div class="section-heading">Custom Shortcuts</div>
+        <div class="section-desc">Create your own message shortcuts for scenarios not covered by the built-in set.</div>
+
+        <div id="customShortcutsList"></div>
+
+        <div class="form-group" style="margin-top: 16px;">
+          <label class="form-label">Shortcut Command</label>
+          <input class="form-input" id="customCommand" type="text" placeholder="e.g., /team-intro" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input class="form-input" id="customLabel" type="text" placeholder="e.g., Team Introduction Email" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message Template</label>
+          <textarea class="form-textarea" id="customTemplate" placeholder="Write your message template here. Use {candidate_name}, {role_title}, {company_name}, etc. for personalization." style="min-height: 150px;"></textarea>
+          <div class="form-hint">Available tags: {candidate_name}, {candidate_company}, {candidate_title}, {role_title}, {company_name}, {hiring_manager}, {interview_date}, {interview_time}, {interviewer_name}, {scheduling_link}, {signature}</div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="saveCustomShortcut">Save Custom Shortcut</button>
+        </div>
+        <div class="status-msg" id="shortcutStatus"></div>
+      </div>
+    </div>
+
+    <!-- Import/Export Tab -->
+    <div class="tab-panel" data-panel="data">
+      <div class="section">
+        <div class="section-heading">Export Data</div>
+        <div class="section-desc">Download all your settings, role profiles, snippets, and pipeline data as a JSON file. Great for backing up or sharing with your team.</div>
+        <button class="btn btn-secondary" id="exportData">Export All Data</button>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">Import Data</div>
+        <div class="section-desc">Import settings from a JSON file. This will merge with your existing data.</div>
+        <input type="file" id="importFile" accept=".json" style="display: none;" />
+        <button class="btn btn-secondary" id="importData">Import from File</button>
+        <div class="status-msg" id="dataStatus"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-heading">Reset All Data</div>
+        <div class="section-desc">Clear all settings, role profiles, snippets, and pipeline data. This cannot be undone.</div>
+        <button class="btn btn-danger" id="resetData">Reset All Data</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>
