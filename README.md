@@ -1,10 +1,8 @@
 # Claude-TA
-AI-Powered Talent Acquisition Toolkit — Built with Claude 4
-# Claude-TA
 
 **AI-Powered Talent Acquisition Toolkit — Built with Claude 4**
 
-A collection of four intelligent recruiting tools that automate sourcing, scoring, mapping, and communication workflows for modern talent acquisition teams. Each project leverages Claude 4 to transform how recruiters find, evaluate, and engage candidates.
+A collection of five intelligent recruiting tools that automate sourcing, scoring, mapping, communication, and intake workflows for modern talent acquisition teams. Each project leverages Claude 4 to transform how recruiters find, evaluate, and engage candidates.
 
 ---
 
@@ -36,8 +34,8 @@ End-to-end sourcing automation that takes a job description and delivers a ranke
 Strategic sourcing intelligence that analyzes any job description and maps out the ideal companies to recruit from — complete with scoring, rationale, and prioritization.
 
 **What it does:**
-- Analyzes a JD to identify 12–20 target companies ranked by relevance
-- Scores each company on Match (0–100) and Poachability (0–100)
+- Analyzes a JD to identify 12-20 target companies ranked by relevance
+- Scores each company on Match (0-100) and Poachability (0-100)
 - Provides fit tags, sourcing rationale, and cross-industry talent pools
 - Delivers a prioritized must-target list for recruiter action
 
@@ -90,6 +88,26 @@ A Chrome extension with a Raycast-style command palette that gives recruiters in
 
 ---
 
+### 5. Intake Meeting — Recruiter Hub
+
+A centralized intake meeting platform that streamlines the recruiter-hiring manager alignment process, ensuring every search kicks off with clarity, structure, and shared expectations.
+
+**What it does:**
+- Provides a structured intake meeting framework for recruiters and hiring managers
+- Captures role requirements, must-haves, nice-to-haves, and deal-breakers
+- Generates standardized intake summaries for consistent handoffs
+- Tracks meeting outcomes and action items
+
+**Key Features:**
+- Structured intake meeting templates and guided workflows
+- Role requirement capture with priority weighting
+- Hiring manager alignment scoring and gap identification
+- Auto-generated intake summaries and search briefs
+- Action item tracking and follow-up reminders
+- Integration-ready output for sourcing pipeline kickoff
+
+---
+
 ## Tech Stack
 
 | Layer | Technologies |
@@ -110,7 +128,8 @@ Claude-TA/
 ├── xray-sourcing-pipeline/        # Project 1 — X-Ray Sourcing Pipeline
 ├── company-mapper/                # Project 2 — Talent Intelligence & Company Mapper
 ├── linkedin-candidate-scorer/     # Project 3 — LinkedIn Candidate Scorer
-└── recruiterkeys-extension/       # Project 4 — RecruiterKeys Communication Platform
+├── recruiterkeys-extension/       # Project 4 — RecruiterKeys Communication Platform
+└── intake-meeting-recruiter-hub/  # Project 5 — Intake Meeting — Recruiter Hub
 ```
 
 ---
