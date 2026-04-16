@@ -1,6 +1,6 @@
-# Claude-TA
-
-**AI-Powered Talent Acquisition Toolkit — Built with Claude 4**
+<p align="center">
+  <img src="assets/claude-ta-banner.svg" alt="Claude-TA Banner" width="100%"/>
+</p>
 
 A collection of five intelligent recruiting tools that automate sourcing, scoring, mapping, communication, and intake workflows for modern talent acquisition teams. Each project leverages Claude 4 to transform how recruiters find, evaluate, and engage candidates.
 
@@ -9,6 +9,7 @@ A collection of five intelligent recruiting tools that automate sourcing, scorin
 ## Projects
 
 ### 1. X-Ray Sourcing Pipeline
+<img src="assets/xray-sourcing-logo.svg" alt="X-Ray Sourcing Pipeline" width="400"/>
 
 End-to-end sourcing automation that takes a job description and delivers a ranked candidate pipeline — no manual searching required.
 
@@ -30,6 +31,7 @@ End-to-end sourcing automation that takes a job description and delivers a ranke
 ---
 
 ### 2. Talent Intelligence & Company Mapper
+<img src="assets/company-mapper-logo.svg" alt="Company Mapper" width="400"/>
 
 Strategic sourcing intelligence that analyzes any job description and maps out the ideal companies to recruit from — complete with scoring, rationale, and prioritization.
 
@@ -49,6 +51,7 @@ Strategic sourcing intelligence that analyzes any job description and maps out t
 ---
 
 ### 3. LinkedIn Candidate Scorer
+<img src="assets/linkedin-scorer-logo.svg" alt="LinkedIn Candidate Scorer" width="400"/>
 
 A Chrome extension (Manifest V3) that overlays a real-time scoring dashboard directly onto LinkedIn profile pages, turning passive browsing into data-driven candidate evaluation.
 
@@ -69,6 +72,7 @@ A Chrome extension (Manifest V3) that overlays a real-time scoring dashboard dir
 ---
 
 ### 4. RecruiterKeys Communication Platform
+<img src="assets/recruiterkeys-logo.svg" alt="RecruiterKeys" width="400"/>
 
 A Chrome extension with a Raycast-style command palette that gives recruiters instant access to 50+ professionally crafted message templates — with smart insertion into any messaging platform.
 
@@ -89,6 +93,7 @@ A Chrome extension with a Raycast-style command palette that gives recruiters in
 ---
 
 ### 5. Intake Meeting — Recruiter Hub
+<img src="assets/recruiter-hub-logo.svg" alt="Recruiter Hub" width="400"/>
 
 A centralized intake meeting platform that streamlines the recruiter-hiring manager alignment process, ensuring every search kicks off with clarity, structure, and shared expectations.
 
@@ -125,11 +130,12 @@ A centralized intake meeting platform that streamlines the recruiter-hiring mana
 ```
 Claude-TA/
 ├── README.md
-├── xray-sourcing-pipeline/        # Project 1 — X-Ray Sourcing Pipeline
-├── company-mapper/                # Project 2 — Talent Intelligence & Company Mapper
-├── linkedin-candidate-scorer/     # Project 3 — LinkedIn Candidate Scorer
-├── recruiterkeys-extension/       # Project 4 — RecruiterKeys Communication Platform
-└── intake-meeting-recruiter-hub/  # Project 5 — Intake Meeting — Recruiter Hub
+├── assets/                            # Logo SVG files
+├── xray-sourcing-pipeline/            # Project 1 — X-Ray Sourcing Pipeline
+├── company-mapper/                    # Project 2 — Talent Intelligence & Company Mapper
+├── linkedin-candidate-scorer/         # Project 3 — LinkedIn Candidate Scorer
+├── recruiterkeys-extension/           # Project 4 — RecruiterKeys Communication Platform
+└── intake-meeting-recruiter-hub/      # Project 5 — Intake Meeting — Recruiter Hub
 ```
 
 ---
