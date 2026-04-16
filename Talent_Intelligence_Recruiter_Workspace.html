@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Talent Intelligence — Target Company Mapper</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>if(typeof pdfjsLib!=='undefined')pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1f2937}
+.upload-screen{min-height:100vh;background:linear-gradient(180deg,#0f172a 0%,#1e3a5f 50%,#1e40af 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+.upload-title{font-size:13px;font-weight:700;letter-spacing:2px;color:#93c5fd;text-transform:uppercase;margin-bottom:12px}
+.upload-h1{font-size:38px;font-weight:800;color:#fff;margin:0 0 12px;line-height:1.2}
+.upload-desc{font-size:15px;color:#94a3b8;max-width:540px;margin:0 auto;line-height:1.6;text-align:center}
+.upload-box{width:100%;max-width:700px;margin-top:32px}
+.drop-zone{border:2px dashed #475569;border-radius:16px;padding:36px 24px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.03);transition:all .3s}
+.drop-zone.dragging{border-color:#60a5fa;background:rgba(96,165,250,0.08)}
+.drop-zone .icon{font-size:40px;margin-bottom:8px}
+.drop-zone .label{font-size:15px;font-weight:600;color:#e2e8f0}
+.drop-zone .sub{font-size:12px;color:#64748b;margin-top:4px}
+textarea.jd-input{width:100%;min-height:200px;padding:20px;border-radius:12px;border:1px solid #334155;background:rgba(255,255,255,0.06);color:#e2e8f0;font-size:14px;line-height:1.7;resize:vertical;outline:none;font-family:inherit;margin-top:16px}
+.btn-analyze{width:100%;padding:16px;margin-top:16px;border-radius:12px;border:none;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .3s}
+.btn-analyze:disabled{background:#334155;cursor:not-allowed}
+.btn-analyze:hover:not(:disabled){opacity:.9}
+.word-count{text-align:center;margin-top:12px;font-size:13px;color:#64748b}
+/* Dashboard */
+.dash-header{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;padding:24px 40px 20px}
+.dash-header-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-start}
+.dash-subtitle{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;opacity:.7;margin-bottom:6px}
+.dash-title{font-size:24px;font-weight:800;margin:0 0 6px}
+.dash-meta{display:flex;gap:16px;font-size:13px;opacity:.85;flex-wrap:wrap}
+.btn-new{padding:10px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+.btn-new:hover{background:rgba(255,255,255,.2)}
+.container{max-width:1200px;margin:0 auto;padding:0 40px 40px}
+/* Tabs */
+.tabs{display:flex;gap:2px;border-bottom:2px solid #e5e7eb;margin-bottom:24px;padding:20px 40px 0;max-width:1200px;margin-left:auto;margin-right:auto;overflow-x:auto}
+.tab-btn{padding:10px 18px;font-size:13px;font-weight:500;color:#6b7280;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;border-radius:8px 8px 0 0;transition:all .2s;white-space:nowrap}
+.tab-btn.active{font-weight:700;color:#1e40af;background:#eff6ff;border-bottom-color:#1e40af}
+/* Cards */
+.card{background:#fff;border-radius:12px;border:1px solid #e5e7eb;padding:24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-title{font-size:18px;font-weight:700;color:#1e3a5f;margin-bottom:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.kpi{text-align:center;padding:18px}
+.kpi-label{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.8px}
+.kpi-value{font-size:32px;font-weight:800;margin:2px 0}
+.kpi-suffix{font-size:12px;color:#9ca3af}
+.dim-label{font-size:10px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.5px}
+.dim-value{font-size:13px;color:#374151;line-height:1.5}
+.dim-group{margin-bottom:10px}
+/* Badges */
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+/* Score bars */
+.score-bar-wrap{display:flex;align-items:center;gap:6px}
+.score-bar-bg{flex:1;height:7px;background:#e5e7eb;border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.score-bar-val{font-size:13px;font-weight:700;min-width:26px}
+/* Company cards */
+.company-card{cursor:pointer;padding:18px;transition:all .2s}
+.company-card.selected{border:2px solid #2563eb}
+.company-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.company-badges{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.company-rank{font-size:13px;font-weight:800;color:#2563eb}
+.company-name{font-size:15px;font-weight:700;color:#1f2937}
+.company-industry{font-size:12px;color:#6b7280}
+.company-scores{display:flex;gap:16px;min-width:240px}
+.score-col{width:110px}
+.score-label{font-size:10px;font-weight:600;color:#6b7280;margin-bottom:3px}
+.company-detail{margin-top:14px;padding-top:14px;border-top:1px solid #e5e7eb;display:none}
+.company-card.selected .company-detail{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+.detail-heading{font-size:11px;font-weight:700;margin-bottom:3px}
+.detail-text{font-size:12px;color:#374151;line-height:1.6}
+/* Filters */
+.filters{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:14px}
+.filters select{padding:5px 10px;border-radius:6px;border:1px solid #d1d5db;font-size:12px}
+.filter-count{margin-left:auto;font-size:12px;color:#6b7280}
+/* Brief */
+.priority-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f3f4f6}
+.priority-rank{font-weight:800;font-size:13px;min-width:22px}
+.priority-name{font-weight:600;font-size:13px;flex:1}
+/* Domain tier box */
+.domain-box{margin-top:16px;padding:12px;border-radius:8px}
+.domain-box.mandatory{background:#fef2f2;border:1px solid #fecaca}
+.domain-box.preferred{background:#fffbeb;border:1px solid #fde68a}
+.domain-box.agnostic{background:#f0fdf4;border:1px solid #bbf7d0}
+.domain-box .tier-label{font-size:12px;font-weight:700;margin-bottom:4px}
+.domain-box .tier-desc{font-size:12px;color:#374151;line-height:1.5}
+.hunt-card{padding:14px;border-radius:10px;background:linear-gradient(135deg,#eff6ff,#f5f3ff);border:1px solid #ddd6fe;text-align:center}
+.hunt-rank{font-size:11px;font-weight:800;color:#2563eb}
+.hunt-name{font-size:13px;font-weight:700;color:#1f2937;margin:4px 0}
+.hunt-scores{margin-top:6px;font-size:12px;color:#6b7280}
+.chart-wrap{height:340px;position:relative}
+.sector-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:13px}
+.sector-name{font-weight:600}
+.sector-stats{color:#6b7280}
+.stretch-card{padding:10px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb}
+.stretch-name{font-size:13px;font-weight:700}
+.stretch-industry{font-size:11px;color:#6b7280}
+.bar-chart-item{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-label{font-size:11px;min-width:110px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-container{flex:1;height:18px;background:#e5e7eb;border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.bar-value{font-size:11px;font-weight:700;min-width:26px}
+.breakdown-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px}
+.breakdown-bar{height:5px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:6px}
+.breakdown-fill{height:100%;border-radius:3px}
+.loading-spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:10px}
+.file-status{margin-top:12px;padding:12px 16px;border-radius:10px;font-size:13px;display:none}
+.file-status.active{display:flex;align-items:center;gap:10px}
+.file-status.success{background:rgba(5,150,105,.12);border:1px solid rgba(5,150,105,.3);color:#059669}
+.file-status.error{background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.3);color:#fca5a5}
+.file-status.loading{background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.3);color:#93c5fd}
+.file-status .fs-icon{font-size:18px}
+.file-status .fs-text{flex:1}
+.file-status .fs-name{font-weight:700}
+.file-type-badges{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.ft-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.ft-badge.pdf{background:rgba(220,38,38,.15);color:#f87171}
+.ft-badge.docx{background:rgba(37,99,235,.15);color:#60a5fa}
+.ft-badge.txt{background:rgba(5,150,105,.15);color:#34d399}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.grid-4{grid-template-columns:1fr 1fr}.grid-5{grid-template-columns:1fr 1fr 1fr}.grid-2{grid-template-columns:1fr}.company-header{flex-direction:column}.company-scores{min-width:auto;width:100%}.company-detail,.company-card.selected .company-detail{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ═══ COMPANY DATABASE ═══
+const _R=[["Marsh McLennan","Insurance Broking","insurance","insurance|broking|risk|marine|energy|cargo|hull|P&I|reinsurance|claims|underwriting|compliance|CBUAE|GCC|advisory|portfolio","uae|gcc|mena|global","l","b2b","h",65,"Direct competitors","h"],["Aon","Insurance Broking","insurance","insurance|broking|risk|marine|energy|reinsurance|claims|underwriting|advisory|analytics|actuarial|compliance","uae|gcc|mena|global","l","b2b","h",68,"Direct competitors","h"],["Willis Towers Watson","Insurance Broking","insurance","insurance|broking|risk|marine|energy|reinsurance|actuarial|advisory|compliance|human capital","uae|gcc|mena|global","l","b2b","h",72,"Direct competitors","h"],["Lockton","Insurance Broking","insurance","insurance|broking|risk|marine|commercial|client management|entrepreneurial","uae|mena|global","m","b2b","h",74,"Direct competitors","m"],["Gallagher","Insurance Broking","insurance","insurance|broking|risk|marine|commercial|client|benefits","uae|mena|global","l","b2b","h",72,"Direct competitors","m"],["Howden Group","Insurance Broking","insurance","insurance|broking|specialty|reinsurance|marine|energy","mena|global","m","b2b","h",70,"Direct competitors","m"],["ADNIC","Insurance (Composite)","insurance","insurance|underwriting|marine|motor|property|health|compliance|CBUAE|UAE|Abu Dhabi|national","uae|gcc","l","b2b","h",62,"Same problem space","m"],["Orient Insurance","Insurance (Composite)","insurance","insurance|underwriting|marine|commercial|motor|health|UAE|Dubai|Al Futtaim","uae|gcc","l","b2b","h",68,"Same problem space","m"],["Oman Insurance","Insurance (Composite)","insurance","insurance|underwriting|marine|motor|health|property|GCC|Dubai","uae|gcc","l","b2b","h",70,"Same problem space","m"],["Al Ain Ahlia Insurance","Insurance (Composite)","insurance","insurance|underwriting|marine|commercial|UAE|compliance","uae|gcc","m","b2b","h",74,"Same problem space","l"],["Daman Insurance","Insurance (Health)","insurance","insurance|health|compliance|CBUAE|UAE|Abu Dhabi|stakeholder|government","uae","l","b2b","h",58,"Adjacent sectors","m"],["AXA Gulf / GIG","Insurance","insurance","insurance|underwriting|commercial|health|motor|M&A|regional","uae|gcc|mena","l","b2b","h",70,"Same problem space","m"],["Zurich Insurance ME","Insurance (Global)","insurance","insurance|underwriting|marine|specialty|global|compliance|product design","uae|gcc|mena|global","l","b2b","h",58,"Same problem space","h"],["Islamic P&I Club","Marine P&I","insurance","marine|P&I|insurance|claims|liability|shipping|hull|cargo|mutual","gcc|mena","s","b2b","h",68,"Direct competitors","m"],["Allianz","Insurance (Global)","insurance","insurance|underwriting|commercial|marine|property|casualty|global|compliance","global|mena","l","b2b","h",55,"Same problem space","h"],["AIG","Insurance (Global)","insurance","insurance|underwriting|commercial|marine|specialty|liability|global","global|mena","l","b2b","h",60,"Same problem space","h"],["Chubb","Insurance (Global)","insurance","insurance|underwriting|commercial|specialty|marine|property|high-net-worth","global","l","b2b","h",52,"Same problem space","h"],["Swiss Re","Reinsurance","insurance","reinsurance|insurance|risk|analytics|actuarial|marine|property|catastrophe","global","l","b2b","h",50,"Adjacent sectors","h"],["Munich Re","Reinsurance","insurance","reinsurance|insurance|risk|analytics|actuarial|marine|specialty","global","l","b2b","h",48,"Adjacent sectors","h"],["Lloyd's Syndicates","Insurance Market","insurance","insurance|underwriting|marine|specialty|hull|cargo|liability|London","uk|global","l","b2b","h",42,"Same problem space","h"],["Saudi Aramco (Risk)","Energy","energy","risk|insurance|marine|cargo|liability|energy|oil|gas|captive","gcc|saudi","l","b2b","h",45,"Adjacent sectors","h"],["ADNOC","Energy","energy","energy|oil|gas|risk|insurance|marine|Abu Dhabi|compliance","uae|gcc","l","b2b","h",48,"Adjacent sectors","h"],["DP World","Ports & Logistics","logistics","ports|logistics|marine|cargo|risk|shipping|supply chain|Dubai|global","uae|global","l","b2b","m",60,"Adjacent sectors","m"],["Emirates Shipping / ADNOC L&S","Shipping","logistics","shipping|marine|cargo|logistics|fleet|risk|insurance","uae|gcc","m","b2b","m",58,"Adjacent sectors","m"],["Google","Technology","tech","software|engineering|AI|machine learning|cloud|data|product|search|ads|platform|scale|SaaS","global|us","l","b2b+b2c","l",40,"Functional talent factories","h"],["Microsoft","Technology","tech","software|engineering|cloud|Azure|AI|enterprise|SaaS|platform|product|data","global|us","l","b2b","l",42,"Functional talent factories","h"],["Amazon / AWS","Technology / Cloud","tech","cloud|AWS|engineering|infrastructure|data|AI|e-commerce|logistics|platform|scale|DevOps","global|us","l","b2b+b2c","l",50,"Functional talent factories","h"],["Meta","Technology","tech","software|engineering|AI|machine learning|social|ads|product|data|VR|platform","global|us","l","b2c","l",55,"Functional talent factories","h"],["Apple","Technology","tech","hardware|software|engineering|product|design|UX|mobile|iOS|platform","global|us","l","b2c","l",35,"Functional talent factories","h"],["Salesforce","Enterprise SaaS","tech","SaaS|CRM|sales|enterprise|cloud|platform|customer success|B2B|partnerships","global|us","l","b2b","l",55,"Functional talent factories","h"],["ServiceNow","Enterprise SaaS","tech","SaaS|enterprise|ITSM|platform|workflow|automation|cloud|B2B","global|us","l","b2b","l",50,"Same problem space","h"],["Stripe","FinTech","fintech","payments|fintech|engineering|API|platform|developer|compliance|financial|scale","global|us","m","b2b","m",48,"Adjacent sectors","h"],["Palantir","Data & Analytics","tech","data|analytics|AI|government|defense|enterprise|platform|intelligence","global|us","m","b2b","m",52,"Adjacent sectors","h"],["SAP","Enterprise Software","tech","ERP|enterprise|software|cloud|finance|supply chain|HR|B2B|platform","global","l","b2b","l",58,"Same problem space","m"],["Oracle","Enterprise Software","tech","database|cloud|ERP|enterprise|software|finance|HR|B2B","global","l","b2b","l",60,"Same problem space","m"],["HubSpot","SaaS / MarTech","tech","SaaS|marketing|CRM|sales|SMB|inbound|content|B2B|growth","global|us","m","b2b","l",55,"Functional talent factories","m"],["Datadog","DevOps / Monitoring","tech","DevOps|monitoring|cloud|infrastructure|engineering|observability|SaaS","global|us","m","b2b","l",52,"Same problem space","h"],["Snowflake","Data / Cloud","tech","data|cloud|data warehouse|analytics|engineering|SQL|AI|enterprise","global|us","m","b2b","l",55,"Same problem space","h"],["JPMorgan Chase","Banking","finance","banking|finance|investment|trading|risk|compliance|wealth|corporate|global","global|us","l","b2b+b2c","h",45,"Adjacent sectors","h"],["Goldman Sachs","Investment Banking","finance","banking|finance|investment|trading|risk|M&A|capital markets|advisory","global|us","l","b2b","h",42,"Adjacent sectors","h"],["Visa","Payments","fintech","payments|fintech|transaction|network|compliance|global|B2B|platform","global","l","b2b","h",45,"Adjacent sectors","h"],["PayPal","Payments / FinTech","fintech","payments|fintech|digital|consumer|e-commerce|platform|mobile","global|us","l","b2b+b2c","m",58,"Adjacent sectors","m"],["Revolut","FinTech / Neobank","fintech","fintech|banking|payments|mobile|crypto|trading|compliance|growth","global|uk","m","b2c","h",60,"Adjacent sectors","m"],["McKinsey & Company","Management Consulting","consulting","consulting|strategy|management|transformation|digital|analytics|leadership","global","l","b2b","l",55,"Functional talent factories","h"],["BCG","Management Consulting","consulting","consulting|strategy|management|digital|transformation|analytics","global","l","b2b","l",55,"Functional talent factories","h"],["Deloitte","Professional Services","consulting","consulting|audit|tax|advisory|risk|compliance|digital|technology|finance","global|uae|gcc","l","b2b","m",60,"Functional talent factories","m"],["PwC","Professional Services","consulting","consulting|audit|tax|advisory|risk|compliance|digital|deals|finance","global|uae|gcc","l","b2b","m",60,"Functional talent factories","m"],["EY","Professional Services","consulting","consulting|audit|tax|advisory|risk|compliance|digital|transformation","global|uae|gcc","l","b2b","m",58,"Functional talent factories","m"],["KPMG","Professional Services","consulting","consulting|audit|tax|advisory|risk|compliance|finance","global|uae|gcc","l","b2b","m",58,"Functional talent factories","m"],["Pfizer","Pharmaceuticals","healthcare","pharma|healthcare|clinical|regulatory|FDA|R&D|drug|biotech|compliance|science","global|us","l","b2b","h",50,"Same problem space","h"],["Johnson & Johnson","Healthcare / Pharma","healthcare","pharma|healthcare|medical devices|consumer health|regulatory|R&D|clinical","global|us","l","b2b+b2c","h",48,"Same problem space","h"],["UnitedHealth Group","Health Insurance","healthcare","health insurance|healthcare|managed care|claims|analytics|compliance|payer","us","l","b2b+b2c","h",52,"Same problem space","m"],["Roche","Pharma / Diagnostics","healthcare","pharma|diagnostics|healthcare|biotech|R&D|clinical|oncology|regulatory","global","l","b2b","h",45,"Same problem space","h"],["Medtronic","Medical Devices","healthcare","medical devices|healthcare|engineering|regulatory|FDA|R&D|clinical|surgical","global|us","l","b2b","h",50,"Adjacent sectors","m"],["Nike","Consumer / Sportswear","consumer","consumer|retail|brand|marketing|e-commerce|DTC|supply chain|design","global|us","l","b2c","l",48,"Functional talent factories","m"],["Procter & Gamble","Consumer Goods","consumer","FMCG|consumer|brand|marketing|supply chain|retail|CPG|innovation","global","l","b2c","l",50,"Functional talent factories","m"],["Unilever","Consumer Goods","consumer","FMCG|consumer|brand|marketing|supply chain|sustainability|CPG|retail","global","l","b2c","l",52,"Functional talent factories","m"],["Etisalat (e&)","Telecom","telecom","telecom|digital|network|5G|cloud|enterprise|UAE|consumer|B2B|platform","uae|gcc|mena","l","b2b+b2c","h",55,"Adjacent sectors","m"],["du (EITC)","Telecom","telecom","telecom|digital|network|UAE|consumer|enterprise|cloud","uae","l","b2b+b2c","h",58,"Adjacent sectors","m"],["STC","Telecom","telecom","telecom|digital|5G|Saudi|enterprise|cloud|platform","gcc|saudi","l","b2b+b2c","h",52,"Adjacent sectors","m"],["Emaar Properties","Real Estate","realestate","real estate|property|development|construction|UAE|Dubai|luxury|hospitality","uae|gcc","l","b2c","m",55,"Adjacent sectors","m"],["Aldar Properties","Real Estate","realestate","real estate|property|development|Abu Dhabi|UAE|investment|retail","uae","l","b2b+b2c","m",58,"Adjacent sectors","m"],["CrowdStrike","Cybersecurity","cyber","cybersecurity|security|endpoint|cloud|threat|detection|AI|SaaS|enterprise","global|us","m","b2b","m",52,"Same problem space","h"],["Palo Alto Networks","Cybersecurity","cyber","cybersecurity|security|network|firewall|cloud|SASE|enterprise|platform","global|us","l","b2b","m",50,"Same problem space","h"],["Fortinet","Cybersecurity","cyber","cybersecurity|security|network|firewall|SD-WAN|enterprise|OT","global","l","b2b","m",55,"Same problem space","m"],["OpenAI","AI","ai","AI|machine learning|LLM|NLP|deep learning|research|GPT|platform|API","us|global","m","b2b+b2c","l",40,"Direct competitors","h"],["Anthropic","AI Safety","ai","AI|machine learning|safety|LLM|research|alignment|Claude|platform","us|global","m","b2b","l",38,"Direct competitors","h"],["Databricks","Data / AI Platform","ai","data|AI|machine learning|analytics|lakehouse|Spark|platform|enterprise|engineering","global|us","m","b2b","l",48,"Same problem space","h"],["Maersk","Shipping & Logistics","logistics","shipping|logistics|marine|container|supply chain|freight|global|trade","global","l","b2b","m",55,"Adjacent sectors","m"],["DHL","Logistics","logistics","logistics|supply chain|freight|e-commerce|express|warehousing|global","global","l","b2b","l",58,"Adjacent sectors","m"],["Flexport","Freight / Logistics Tech","logistics","logistics|freight|supply chain|technology|trade|customs|platform","global|us","m","b2b","m",62,"Adjacent sectors","m"],["Mubadala","Sovereign Wealth","government","investment|sovereign wealth|Abu Dhabi|UAE|portfolio|finance|strategy|energy|technology","uae","l","b2b","m",40,"Adjacent sectors","h"],["ADQ","Sovereign Wealth","government","investment|sovereign wealth|Abu Dhabi|UAE|portfolio|strategy|food|energy|utilities","uae","l","b2b","m",42,"Adjacent sectors","m"]];
+const DB=_R.map(r=>({name:r[0],industry:r[1],sector:r[2],keywords:r[3].split("|"),region:r[4].split("|"),scale:r[5]==="l"?"large":r[5]==="m"?"mid":"small",salesMotion:r[6],regulatory:r[7]==="h"?"high":r[7]==="m"?"medium":"low",basePoach:r[8],pools:[r[9]],compTier:r[10]==="h"?"High":r[10]==="m"?"Medium":"Low"}));
+const COMP_TIER_COLORS={"High":"#dc2626","Medium":"#d97706","Low":"#059669"};
+const COMP_TIER_LABELS={"High":"High Paymaster","Medium":"Medium Paymaster","Low":"Low Paymaster"};
+const COMP_TIER_ICONS={"High":"\u26A0\uFE0F","Medium":"\u2705","Low":"\u{1F4B0}"};
+
+// ═══ ANALYSIS ENGINE ═══
+function extractKw(t){return{raw:t.toLowerCase()}}
+function detectTitle(t){const p=[/job\s*title[:\s]*([^\n|]+)/i,/position[:\s]*([^\n|]+)/i];for(const r of p){const m=t.match(r);if(m)return m[1].trim()}const ls=t.split("\n").filter(l=>l.trim().length>3);for(const l of ls.slice(0,10))if(/manager|director|head|lead|senior|chief|vp|analyst|engineer|architect|designer|specialist|consultant|officer/i.test(l)&&l.trim().length<80)return l.trim();return"Untitled Role"}
+function detectSeniority(t){const l=t.toLowerCase();if(/\b(c-suite|ceo|cfo|cto|coo|chief)\b/.test(l))return"Executive";if(/\b(vp|vice president)\b/.test(l))return"VP / Executive";if(/\b(director|head of)\b/.test(l))return"Director / Head";if(/\bmanager\b/.test(l))return"Manager";if(/\b(senior|lead|principal)\b/.test(l))return"Senior IC / Lead";if(/\b(junior|associate|intern)\b/.test(l))return"Junior / Entry";return"Mid-level"}
+function detectLoc(t){const l=t.toLowerCase(),rm={"abu dhabi":"uae",dubai:"uae",uae:"uae",riyadh:"saudi","saudi arabia":"saudi",qatar:"gcc",bahrain:"gcc",london:"uk","new york":"us","san francisco":"us",singapore:"apac",remote:"global",global:"global"},locs=[],regs=[];for(const[k,v]of Object.entries(rm))if(l.includes(k)){locs.push(k);regs.push(v)}if(/\bgcc\b/.test(l))regs.push("gcc");if(/\bmena\b/.test(l))regs.push("mena");return{locations:locs,regions:[...new Set(regs.length?regs:["global"])]}}
+function detectTier(t){const l=t.toLowerCase();const ms=["regulatory compliance","certification required","marine insurance","actuarial","clinical","pharmaceutical","safety critical"];let c=0;ms.forEach(s=>{if(l.includes(s))c++});if(c>=2)return"Domain-Mandatory";if(c>=1)return"Domain-Preferred";return"Domain-Agnostic"}
+function detectExp(t){const m=t.match(/(\d+)\+?\s*years?\s*(of\s*)?(experience|exp)/i);return m?parseInt(m[1]):null}
+function inferSectors(t){const l=t.toLowerCase(),sk={insurance:["insurance","underwriting","broking","claims","actuarial","reinsurance","marine insurance","P&I","hull","cargo"],tech:["software","engineering","API","SaaS","cloud","platform","frontend","backend","DevOps","react","python","java"],fintech:["payments","fintech","blockchain","crypto","lending","transaction"],finance:["investment","banking","wealth management","asset management","M&A","capital markets","private equity"],healthcare:["healthcare","pharma","clinical","FDA","medical","biotech","drug"],consulting:["consulting","advisory","strategy","transformation"],energy:["energy","oil","gas","renewable","solar"],logistics:["logistics","supply chain","freight","shipping","warehouse"],cyber:["cybersecurity","security","threat","vulnerability","SOC"],ai:["artificial intelligence","machine learning","deep learning","NLP","LLM"],consumer:["consumer","retail","e-commerce","DTC","brand","FMCG"],telecom:["telecom","5G","network","broadband"]},sc={};for(const[s,kws]of Object.entries(sk)){sc[s]=0;kws.forEach(k=>{const re=new RegExp("\\b"+k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","gi");const m=l.match(re);if(m)sc[s]+=m.length})}const r=Object.entries(sc).sort((a,b)=>b[1]-a[1]).filter(e=>e[1]>0).map(e=>({sector:e[0],score:e[1]}));return r.length?r:[{sector:"general",score:1}]}
+function scoreCompany(c,a){const{kw,loc,sectors,domainTier}=a;let ms=0;const reasons=[];let kwH=0;c.keywords.forEach(k=>{if(kw.raw.includes(k.toLowerCase()))kwH++});ms+=Math.min(40,Math.round(kwH/Math.max(c.keywords.length,1)*55));if(kwH>4)reasons.push("Strong keyword alignment");const ts=sectors.slice(0,3).map(s=>s.sector);if(ts.includes(c.sector)){const i=ts.indexOf(c.sector);ms+=[25,18,12][i];reasons.push(i===0?"Direct industry match":"Adjacent industry")}else if(domainTier==="Domain-Agnostic")ms+=8;const ro=c.region.some(r=>loc.regions.includes(r)||r==="global");ms+=ro?15:3;if(!ro)reasons.push("Different geography");const jr=/\b(compliance|regulatory|regulated|license|audit)\b/i.test(kw.raw);if(jr&&c.regulatory==="high")ms+=10;else if(jr&&c.regulatory==="medium")ms+=5;else if(!jr)ms+=5;const jb=/\b(b2b|enterprise|commercial|partner|client|account)\b/i.test(kw.raw);if(jb&&c.salesMotion.includes("b2b"))ms+=10;else ms+=4;if(domainTier==="Domain-Mandatory"&&!ts.includes(c.sector)){ms=Math.round(ms*0.6);reasons.push("Domain-mandatory \u2014 high ramp risk")}else if(domainTier==="Domain-Preferred"&&!ts.includes(c.sector))ms=Math.round(ms*0.8);let po=Math.max(25,Math.min(85,c.basePoach+(c.scale==="large"?-3:c.scale==="small"?5:0)+Math.floor(Math.random()*8-4)));let conf="Medium";if(kwH>=5&&ts.includes(c.sector)&&ro)conf="High";else if(kwH<3&&!ts.includes(c.sector))conf="Low";let tag="Conditional fit";if(ts.includes(c.sector)&&kwH>=4)tag="Strong fit";else if(kwH>=3||ts.slice(0,2).includes(c.sector))tag="Transferable fit";const why=(reasons.length?reasons.slice(0,3).join(". "):"Potential transferable talent source")+".";let risk=!ro?"Different geography \u2014 relocation needed.":(domainTier==="Domain-Mandatory"&&!ts.includes(c.sector))?"Lacks required domain expertise.":tag==="Strong fit"?"Strong retention factors may reduce openness.":"May require domain ramp time.";let ps=po>=70?"Likely openness due to career/comp gaps.":po>=55?"Moderate openness; target career inflection points.":"Strong retention; target specific individuals.";const compTier=c.compTier;let salaryNote=compTier==="High"?"Expect premium salary expectations. Budget headroom needed.":compTier==="Medium"?"Salary expectations likely matchable. Sweet spot for offers.":"Below-market comp \u2014 easy to attract with competitive offer.";return{company:c.name,industry:c.industry,tag,match:Math.min(97,Math.max(30,ms)),poach:po,confidence:conf,pool:c.pools[0],why,risk,poachSignals:ps,priority:"low",sector:c.sector,compTier,salaryNote}}
+function analyzeJD(text){const kw=extractKw(text),title=detectTitle(text),seniority=detectSeniority(text),loc=detectLoc(text),domainTier=detectTier(text),expYears=detectExp(text),sectors=inferSectors(text);const a={kw,loc,sectors,domainTier};let scored=DB.map(c=>scoreCompany(c,a));scored.sort((a,b)=>b.match-a.match);scored=scored.slice(0,20).map((c,i)=>({...c,rank:i+1,priority:i<7?"must":i<14?"nice":"low"}));const roleDims=[{l:"Title & Function",v:title},{l:"Seniority",v:seniority},{l:"Domain Tier",v:domainTier},{l:"Experience",v:expYears?expYears+"+ years":"Not specified"},{l:"Location",v:loc.locations.length?loc.locations.map(x=>x[0].toUpperCase()+x.slice(1)).join(", "):"Not specified"},{l:"Primary Sector",v:sectors[0].sector[0].toUpperCase()+sectors[0].sector.slice(1)},{l:"Adjacent",v:sectors.slice(1,4).map(s=>s.sector[0].toUpperCase()+s.sector.slice(1)).join(", ")||"None"}];const ctx=[{l:"Industry",v:sectors[0].sector[0].toUpperCase()+sectors[0].sector.slice(1)},{l:"Geography",v:loc.regions.map(r=>r.toUpperCase()).join(", ")},{l:"Regulatory",v:/\b(compliance|regulatory|regulated)\b/i.test(text)?"High":"Standard"},{l:"Sales Motion",v:/\b(b2b|enterprise|commercial)\b/i.test(text.toLowerCase())?"B2B / Enterprise":"Mixed"}];return{title,seniority,domainTier,sectors,companies:scored,roleDims,ctx}}
+
+// ═══ UI COLORS ═══
+const TC={"Strong fit":"#059669","Transferable fit":"#d97706","Conditional fit":"#dc2626"};
+const CC={High:"#059669",Medium:"#d97706",Low:"#dc2626"};
+const PC={"Direct competitors":"#3b82f6","Same problem space":"#8b5cf6","Functional talent factories":"#ec4899","Adjacent sectors":"#f59e0b"};
+const PL={must:"Must-Target",nice:"Nice-to-Target",low:"Low Priority"};
+const PLC={must:"#059669",nice:"#3b82f6",low:"#9ca3af"};
+
+// ═══ STATE ═══
+let state={screen:"upload",analysis:null,rawText:"",tab:"overview",selected:null,filterTag:"all",filterPool:"all",filterComp:"all",sortBy:"rank"};
+function setState(patch){Object.assign(state,patch);render()}
+
+// ═══ RENDER HELPERS ═══
+function badge(text,color){return`<span class="badge" style="background:${color}18;color:${color};border:1px solid ${color}40">${text}</span>`}
+function scoreBar(val,color){return`<div class="score-bar-wrap"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${val}%;background:${color}"></div></div><span class="score-bar-val" style="color:${color}">${val}</span></div>`}
+
+// ═══ RENDER ═══
+function render(){
+  const el=document.getElementById("app");
+  if(state.screen==="upload"){renderUpload(el);return}
+  renderDashboard(el);
+}
+
+async function extractPdfText(arrayBuffer){
+  if(typeof pdfjsLib==="undefined")throw new Error("PDF.js not loaded");
+  const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  let text="";
+  for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const content=await page.getTextContent();text+=content.items.map(it=>it.str).join(" ")+"\n"}
+  return text;
+}
+async function extractDocxText(arrayBuffer){
+  if(typeof mammoth==="undefined")throw new Error("Mammoth.js not loaded");
+  const result=await mammoth.extractRawText({arrayBuffer});
+  return result.value;
+}
+async function handleFile(file,ta,fs){
+  const name=file.name.toLowerCase();
+  const ext=name.split(".").pop();
+  fs.className="file-status active loading";
+  fs.innerHTML='<span class="fs-icon">\u{23F3}</span><span class="fs-text">Extracting text from <span class="fs-name">'+file.name+'</span>...</span>';
+  try{
+    if(ext==="pdf"){
+      const buf=await file.arrayBuffer();
+      const text=await extractPdfText(buf);
+      ta.value=text;
+      fs.className="file-status active success";
+      fs.innerHTML='<span class="fs-icon">\u{2705}</span><span class="fs-text"><span class="fs-name">'+file.name+'</span> \u2014 '+text.split(/\s+/).length+' words extracted from PDF</span>';
+    }else if(ext==="docx"||ext==="doc"){
+      const buf=await file.arrayBuffer();
+      const text=await extractDocxText(buf);
+      ta.value=text;
+      fs.className="file-status active success";
+      fs.innerHTML='<span class="fs-icon">\u{2705}</span><span class="fs-text"><span class="fs-name">'+file.name+'</span> \u2014 '+text.split(/\s+/).length+' words extracted from Word document</span>';
+    }else{
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        ta.value=ev.target.result;
+        fs.className="file-status active success";
+        fs.innerHTML='<span class="fs-icon">\u{2705}</span><span class="fs-text"><span class="fs-name">'+file.name+'</span> \u2014 loaded</span>';
+        ta.dispatchEvent(new Event("input"));
+      };
+      reader.readAsText(file);
+      return;
+    }
+    ta.dispatchEvent(new Event("input"));
+  }catch(err){
+    fs.className="file-status active error";
+    fs.innerHTML='<span class="fs-icon">\u{274C}</span><span class="fs-text">Failed to extract text from <span class="fs-name">'+file.name+'</span>: '+err.message+'</span>';
+  }
+}
+function renderUpload(el){
+  el.innerHTML='<div class="upload-screen"><div style="text-align:center;margin-bottom:32px"><div class="upload-title">Talent Intelligence Engine</div><h1 class="upload-h1">Target Company Mapper</h1><p class="upload-desc">Upload or paste any job description to instantly generate a recruiter-ready target company map with match scores, poachability signals, and strategic sourcing recommendations.</p></div><div class="upload-box"><div class="drop-zone" id="dropZone"><div class="icon">\u{1F4C4}</div><div class="label">Drop a file here or click to browse</div><div class="sub">Supports PDF, Word (.docx), and text files</div><div class="file-type-badges"><span class="ft-badge pdf">PDF</span><span class="ft-badge docx">DOCX</span><span class="ft-badge txt">TXT</span></div><input type="file" id="fileInput" accept=".txt,.csv,.md,.text,.pdf,.docx,.doc" style="display:none"></div><div class="file-status" id="fileStatus"></div><textarea class="jd-input" id="jdText" placeholder="Or paste the full job description text here..."></textarea><button class="btn-analyze" id="btnAnalyze" disabled>Analyze Job Description</button><div class="word-count" id="wordCount"></div></div></div>';
+  const dz=document.getElementById("dropZone"),fi=document.getElementById("fileInput"),ta=document.getElementById("jdText"),btn=document.getElementById("btnAnalyze"),wc=document.getElementById("wordCount"),fs=document.getElementById("fileStatus");
+  dz.onclick=()=>fi.click();
+  dz.ondragover=e=>{e.preventDefault();dz.classList.add("dragging")};
+  dz.ondragleave=()=>dz.classList.remove("dragging");
+  dz.ondrop=e=>{e.preventDefault();dz.classList.remove("dragging");if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0],ta,fs)};
+  fi.onchange=()=>{if(fi.files[0])handleFile(fi.files[0],ta,fs)};
+  function upd(){const v=ta.value.trim();btn.disabled=!v;wc.textContent=v?v.split(/\s+/).length+" words detected":""}
+  ta.oninput=upd;
+  btn.onclick=()=>{if(!ta.value.trim())return;btn.innerHTML='<span class="loading-spinner"></span>Analyzing...';btn.disabled=true;setTimeout(()=>{const r=analyzeJD(ta.value);setState({screen:"dashboard",analysis:r,rawText:ta.value,tab:"overview"})},800)};
+}
+
+function renderDashboard(el){
+  const a=state.analysis,cs=a.companies;
+  let filtered=cs.filter(c=>(state.filterTag==="all"||c.tag===state.filterTag)&&(state.filterPool==="all"||c.pool===state.filterPool)&&(state.filterComp==="all"||c.compTier===state.filterComp));
+  if(state.sortBy==="match")filtered.sort((a,b)=>b.match-a.match);
+  else if(state.sortBy==="poach")filtered.sort((a,b)=>b.poach-a.poach);
+  else filtered.sort((a,b)=>a.rank-b.rank);
+  const avgM=Math.round(cs.reduce((s,c)=>s+c.match,0)/cs.length);
+  const avgP=Math.round(cs.reduce((s,c)=>s+c.poach,0)/cs.length);
+  const hiConf=cs.filter(c=>c.confidence==="High").length;
+  const mustN=cs.filter(c=>c.priority==="must").length;
+  const pools=[...new Set(cs.map(c=>c.pool))];
+  const tags=[...new Set(cs.map(c=>c.tag))];
+  const tierClass=a.domainTier==="Domain-Mandatory"?"mandatory":a.domainTier==="Domain-Preferred"?"preferred":"agnostic";
+  const tierColor=a.domainTier==="Domain-Mandatory"?"#dc2626":a.domainTier==="Domain-Preferred"?"#d97706":"#059669";
+  const tierDesc=a.domainTier==="Domain-Mandatory"?"Industry experience is a hard gate. Candidates from outside face high ramp risk.":a.domainTier==="Domain-Preferred"?"Industry experience accelerates ramp but adjacent talent can succeed.":"Problem set matters more than industry. Broaden search freely.";
+
+  let html=`<div class="dash-header"><div class="dash-header-inner"><div><div class="dash-subtitle">Talent Intelligence Report</div><h1 class="dash-title">${a.title}</h1><div class="dash-meta"><span>${a.seniority}</span><span>Domain: <strong>${a.domainTier}</strong></span><span>${cs.length} Target Companies</span></div></div><button class="btn-new" onclick="setState({screen:'upload',analysis:null,rawText:'',tab:'overview',selected:null,filterTag:'all',filterPool:'all',filterComp:'all',sortBy:'rank'})">\u{1F4C4} New JD</button></div></div>`;
+  html+=`<div class="tabs">`;
+  [{id:"overview",label:"\u{1F4CB} Overview"},{id:"companies",label:"\u{1F3E2} Target Companies"},{id:"analytics",label:"\u{1F4CA} Analytics"},{id:"brief",label:"\u{1F3AF} Recruiter Brief"}].forEach(t=>{html+=`<button class="tab-btn${state.tab===t.id?" active":""}" onclick="setState({tab:'${t.id}',selected:null})">${t.label}</button>`});
+  html+=`</div><div class="container">`;
+
+  // TAB: OVERVIEW
+  if(state.tab==="overview"){
+    const medCompN=cs.filter(c=>c.compTier==="Medium").length;const lowCompN=cs.filter(c=>c.compTier==="Low").length;const budgetFriendly=medCompN+lowCompN;
+    html+=`<div class="grid-4">${[{l:"Avg Match",v:avgM,c:"#2563eb",s:"/100"},{l:"Avg Poachability",v:avgP,c:"#059669",s:"/100"},{l:"High Confidence",v:hiConf,c:"#7c3aed",s:" of "+cs.length},{l:"Budget-Friendly",v:budgetFriendly,c:"#d97706",s:" med/low comp"}].map(k=>`<div class="card kpi"><div class="kpi-label">${k.l}</div><div class="kpi-value" style="color:${k.c}">${k.v}</div><div class="kpi-suffix">${k.s}</div></div>`).join("")}</div>`;
+    html+=`<div class="grid-2"><div class="card"><div class="card-title">Role Interpretation</div>${a.roleDims.map(d=>`<div class="dim-group"><div class="dim-label">${d.l}</div><div class="dim-value">${d.v}</div></div>`).join("")}</div>`;
+    html+=`<div class="card"><div class="card-title">Hiring Context</div>${a.ctx.map(d=>`<div class="dim-group"><div class="dim-label">${d.l}</div><div class="dim-value">${d.v}</div></div>`).join("")}<div class="domain-box ${tierClass}"><div class="tier-label" style="color:${tierColor}">${a.domainTier.toUpperCase()}</div><div class="tier-desc">${tierDesc}</div></div></div></div>`;
+    html+=`<div class="card"><div class="card-title">Top 5 Hunting Grounds</div><div class="grid-5">${cs.slice(0,5).map(c=>`<div class="hunt-card"><div class="hunt-rank">#${c.rank}</div><div class="hunt-name">${c.company}</div>${badge(c.tag,TC[c.tag])}<div class="hunt-scores">Match: ${c.match} | Poach: ${c.poach}</div></div>`).join("")}</div></div>`;
+  }
+
+  // TAB: COMPANIES
+  if(state.tab==="companies"){
+    const compTiers=["High","Medium","Low"];
+    html+=`<div class="card filters"><span style="font-size:12px;font-weight:600;color:#6b7280">Filters:</span><select onchange="setState({filterTag:this.value})"><option value="all">All Fit Tags</option>${tags.map(t=>`<option${state.filterTag===t?" selected":""}>${t}</option>`).join("")}</select><select onchange="setState({filterPool:this.value})"><option value="all">All Pools</option>${pools.map(p=>`<option${state.filterPool===p?" selected":""}>${p}</option>`).join("")}</select><select onchange="setState({filterComp:this.value})"><option value="all">All Comp Tiers</option>${compTiers.map(t=>`<option value="${t}"${state.filterComp===t?" selected":""}>${COMP_TIER_LABELS[t]}</option>`).join("")}</select><select onchange="setState({sortBy:this.value})"><option value="rank"${state.sortBy==="rank"?" selected":""}>Sort: Rank</option><option value="match"${state.sortBy==="match"?" selected":""}>Sort: Match</option><option value="poach"${state.sortBy==="poach"?" selected":""}>Sort: Poachability</option></select><span class="filter-count">${filtered.length} / ${cs.length}</span></div>`;
+    filtered.forEach(c=>{const sel=state.selected===c.rank;const selClass=sel?" selected":"";const selClick=sel?"null":c.rank;
+      const compBadge=badge(COMP_TIER_LABELS[c.compTier],COMP_TIER_COLORS[c.compTier]);
+      html+='<div class="card company-card'+selClass+'" onclick="setState({selected:'+selClick+'})"><div class="company-header"><div style="flex:1"><div class="company-badges"><span class="company-rank">#'+c.rank+'</span><span class="company-name">'+c.company+'</span>'+badge(c.tag,TC[c.tag])+badge(c.confidence,CC[c.confidence])+compBadge+badge(c.pool,PC[c.pool]||"#6b7280")+badge(PL[c.priority],PLC[c.priority])+'</div><div class="company-industry">'+c.industry+'</div></div><div class="company-scores"><div class="score-col"><div class="score-label">Match</div>'+scoreBar(c.match,"#2563eb")+'</div><div class="score-col"><div class="score-label">Poachability</div>'+scoreBar(c.poach,"#059669")+'</div></div></div><div class="company-detail"><div><div class="detail-heading" style="color:#2563eb">WHY SOURCE HERE</div><div class="detail-text">'+c.why+'</div></div><div><div class="detail-heading" style="color:#dc2626">KEY RISK / GAP</div><div class="detail-text">'+c.risk+'</div></div><div><div class="detail-heading" style="color:#059669">POACHABILITY SIGNALS</div><div class="detail-text">'+c.poachSignals+'</div></div><div><div class="detail-heading" style="color:'+COMP_TIER_COLORS[c.compTier]+'">SALARY EXPECTATIONS '+COMP_TIER_ICONS[c.compTier]+'</div><div class="detail-text">'+c.salaryNote+'</div></div></div></div>';
+    });
+  }
+
+  // TAB: ANALYTICS
+  if(state.tab==="analytics"){
+    html+=`<div class="grid-2"><div class="card"><div class="card-title">Match Score Distribution</div><div id="matchChart" style="margin-top:8px">${cs.map(c=>`<div class="bar-chart-item"><div class="bar-label">${c.company.split("(")[0].split("/")[0].trim().slice(0,18)}</div><div class="bar-container"><div class="bar-fill" style="width:${c.match}%;background:${TC[c.tag]}"></div></div><div class="bar-value" style="color:${TC[c.tag]}">${c.match}</div></div>`).join("")}</div></div>`;
+    html+=`<div class="card"><div class="card-title">Poachability Ranking</div><div id="poachChart" style="margin-top:8px">${[...cs].sort((a,b)=>b.poach-a.poach).map(c=>`<div class="bar-chart-item"><div class="bar-label">${c.company.split("(")[0].split("/")[0].trim().slice(0,18)}</div><div class="bar-container"><div class="bar-fill" style="width:${c.poach}%;background:${PC[c.pool]||"#6b7280"}"></div></div><div class="bar-value" style="color:${PC[c.pool]||"#6b7280"}">${c.poach}</div></div>`).join("")}</div></div></div>`;
+    html+=`<div class="grid-2"><div class="card"><div class="card-title">Match vs. Poachability</div><div class="chart-wrap"><canvas id="scatterCanvas"></canvas></div></div>`;
+    html+=`<div class="card"><div class="card-title">Breakdown</div>`;
+    [{t:"By Fit Tag",d:tags.map(t=>({l:t,n:cs.filter(c=>c.tag===t).length,c:TC[t]}))},{t:"By Pool",d:pools.map(p=>({l:p,n:cs.filter(c=>c.pool===p).length,c:PC[p]||"#6b7280"}))},{t:"By Priority",d:Object.keys(PL).map(p=>({l:PL[p],n:cs.filter(c=>c.priority===p).length,c:PLC[p]}))},{t:"By Compensation Tier",d:["High","Medium","Low"].map(t=>({l:COMP_TIER_LABELS[t],n:cs.filter(c=>c.compTier===t).length,c:COMP_TIER_COLORS[t]}))}].forEach(s=>{
+      html+=`<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;margin-bottom:8px">${s.t}</div>${s.d.map(d=>{const pct=Math.round(d.n/cs.length*100);return`<div class="breakdown-label"><span style="color:${d.c}">${d.l}</span><span style="font-weight:700">${d.n} (${pct}%)</span></div><div class="breakdown-bar"><div class="breakdown-fill" style="width:${pct}%;background:${d.c}"></div></div>`}).join("")}</div>`;
+    });
+    html+=`</div></div>`;
+  }
+
+  // TAB: BRIEF
+  if(state.tab==="brief"){
+    const medCs=cs.filter(c=>c.compTier==="Medium"),lowCs=cs.filter(c=>c.compTier==="Low"),hiCs=cs.filter(c=>c.compTier==="High");
+    html+=`<div class="card"><div class="card-title">Ideal Source Company Profile</div><p style="font-size:14px;line-height:1.7;color:#374151">Prioritize companies in the <strong>${a.sectors[0].sector}</strong> sector with professionals performing analogous work.${a.domainTier==="Domain-Mandatory"?" Focus narrowly on direct industry overlap. Adjacent candidates carry significant ramp risk.":a.domainTier==="Domain-Preferred"?" Industry experience preferred but adjacent talent can succeed with onboarding.":" Expand broadly across companies with analogous scale and complexity."}</p></div>`;
+    html+=`<div class="card" style="border-left:4px solid #d97706"><div class="card-title">\u{1F4B0} Compensation Tier Advisory</div><div class="grid-3"><div style="padding:12px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca"><div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:6px">HIGH PAYMASTER (${hiCs.length})</div><div style="font-size:12px;color:#374151;line-height:1.6">Expect premium salary expectations. Budget headroom needed for competitive offers. Best approached for exceptional talent only.</div><div style="margin-top:8px;font-size:11px;color:#6b7280">${hiCs.slice(0,4).map(c=>c.company).join(", ")}${hiCs.length>4?"...":""}</div></div><div style="padding:12px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a"><div style="font-size:12px;font-weight:700;color:#d97706;margin-bottom:6px">MEDIUM PAYMASTER (${medCs.length}) \u2014 SWEET SPOT</div><div style="font-size:12px;color:#374151;line-height:1.6">Salary expectations likely matchable. These are the priority targets for cost-effective hires with strong skills.</div><div style="margin-top:8px;font-size:11px;color:#6b7280">${medCs.slice(0,4).map(c=>c.company).join(", ")}${medCs.length>4?"...":""}</div></div><div style="padding:12px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0"><div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:6px">LOW PAYMASTER (${lowCs.length})</div><div style="font-size:12px;color:#374151;line-height:1.6">Below-market compensation \u2014 easy to attract with competitive offer. Strong value hires.</div><div style="margin-top:8px;font-size:11px;color:#6b7280">${lowCs.slice(0,4).map(c=>c.company).join(", ")}${lowCs.length>4?"...":""}</div></div></div></div>`;
+    html+=`<div class="grid-2"><div class="card" style="border-left:4px solid #059669"><div class="card-title">Must-Target (${cs.filter(c=>c.priority==="must").length})</div>${cs.filter(c=>c.priority==="must").map(c=>`<div class="priority-row"><span class="priority-rank" style="color:#2563eb">#${c.rank}</span><span class="priority-name">${c.company}</span>${badge(c.match,"#2563eb")}${badge(c.tag,TC[c.tag])}</div>`).join("")}</div>`;
+    html+=`<div class="card" style="border-left:4px solid #3b82f6"><div class="card-title">Nice-to-Target (${cs.filter(c=>c.priority==="nice").length})</div>${cs.filter(c=>c.priority==="nice").map(c=>`<div class="priority-row"><span class="priority-rank" style="color:#6b7280">#${c.rank}</span><span class="priority-name">${c.company}</span>${badge(c.match,"#6b7280")}${badge(c.tag,TC[c.tag])}</div>`).join("")}</div></div>`;
+    if(cs.filter(c=>c.priority==="low").length){
+      html+=`<div class="card" style="border-left:4px solid #9ca3af"><div class="card-title">Low Priority / Stretch</div><div class="grid-3">${cs.filter(c=>c.priority==="low").map(c=>`<div class="stretch-card"><div class="stretch-name">${c.company}</div><div class="stretch-industry">${c.industry}</div><div style="margin-top:4px">${badge(c.tag,TC[c.tag])}</div></div>`).join("")}</div></div>`;
+    }
+    html+=`<div class="card" style="border-left:4px solid #7c3aed"><div class="card-title">Cross-Industry View</div><div class="grid-2"><div><div style="font-size:13px;font-weight:700;color:#059669;margin-bottom:8px">Sectors Represented</div>${[...new Set(cs.map(c=>c.sector))].map(s=>{const sc=cs.filter(c=>c.sector===s);return`<div class="sector-row"><span class="sector-name">${s[0].toUpperCase()+s.slice(1)}</span><span class="sector-stats">${sc.length} cos, avg match ${Math.round(sc.reduce((a,c)=>a+c.match,0)/sc.length)}</span></div>`}).join("")}</div><div><div style="font-size:13px;font-weight:700;color:#dc2626;margin-bottom:8px">Key Considerations</div><div style="font-size:12px;color:#374151;line-height:1.7">${a.domainTier==="Domain-Mandatory"?"Focus 80% on Strong Fit companies within core industry. Adjacent candidates only for exceptional talent.":a.domainTier==="Domain-Preferred"?"Adjacent-sector viable when candidates show relevant functional experience. Gap closes in 3\u20136 months.":"Cast a wide net. Prioritize companies with analogous operating environments."}</div></div></div></div>`;
+  }
+
+  html+=`</div>`;
+  el.innerHTML=html;
+
+  // Draw scatter chart if analytics tab
+  if(state.tab==="analytics"){
+    setTimeout(()=>{
+      const cv=document.getElementById("scatterCanvas");
+      if(!cv)return;
+      new Chart(cv,{type:"scatter",data:{datasets:[{label:"Companies",data:cs.map(c=>({x:c.match,y:c.poach,company:c.company,tag:c.tag})),backgroundColor:cs.map(c=>TC[c.tag]+"cc"),pointRadius:8,pointHoverRadius:11}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:"Match Score"},min:20,max:100},y:{title:{display:true,text:"Poachability"},min:20,max:90}},plugins:{tooltip:{callbacks:{label:ctx=>`${ctx.raw.company}: Match ${ctx.raw.x}, Poach ${ctx.raw.y}`}}}}});
+    },100);
+  }
+}
+
+// Boot
+render();
+</script>
+</body>
+</html>
