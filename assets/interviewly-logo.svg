@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" role="img" aria-label="Interviewly — AI Interview Scheduler with Bias Mitigation">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f0f10"/>
+      <stop offset="100%" stop-color="#1c1d22"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5e6ad2"/>
+      <stop offset="100%" stop-color="#7c83e8"/>
+    </linearGradient>
+    <linearGradient id="iconGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7c83e8"/>
+      <stop offset="100%" stop-color="#5e6ad2"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="720" height="200" rx="16" fill="url(#bg)"/>
+
+  <!-- Decorative dot grid -->
+  <g fill="#ffffff" opacity="0.05">
+    <circle cx="600" cy="40" r="2"/>
+    <circle cx="630" cy="40" r="2"/>
+    <circle cx="660" cy="40" r="2"/>
+    <circle cx="690" cy="40" r="2"/>
+    <circle cx="600" cy="70" r="2"/>
+    <circle cx="630" cy="70" r="2"/>
+    <circle cx="660" cy="70" r="2"/>
+    <circle cx="690" cy="70" r="2"/>
+    <circle cx="600" cy="100" r="2"/>
+    <circle cx="630" cy="100" r="2"/>
+    <circle cx="660" cy="100" r="2"/>
+    <circle cx="690" cy="100" r="2"/>
+  </g>
+
+  <!-- Calendar icon with checkmark -->
+  <g transform="translate(40, 50)" filter="url(#glow)">
+    <rect x="0" y="10" width="100" height="90" rx="12" fill="url(#iconGrad)"/>
+    <rect x="0" y="10" width="100" height="22" rx="12" fill="#4c54b8"/>
+    <rect x="0" y="22" width="100" height="10" fill="#4c54b8"/>
+    <line x1="22" y1="0" x2="22" y2="22" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+    <line x1="78" y1="0" x2="78" y2="22" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+    <!-- Three rows of cells -->
+    <g fill="#ffffff" opacity="0.55">
+      <rect x="14" y="44" width="14" height="10" rx="2"/>
+      <rect x="36" y="44" width="14" height="10" rx="2"/>
+      <rect x="58" y="44" width="14" height="10" rx="2"/>
+      <rect x="14" y="60" width="14" height="10" rx="2"/>
+    </g>
+    <!-- Highlighted cell (the scheduled slot) -->
+    <rect x="36" y="60" width="14" height="10" rx="2" fill="#ffffff"/>
+    <!-- Checkmark overlay -->
+    <g transform="translate(46, 56)">
+      <circle cx="22" cy="22" r="22" fill="#10b981"/>
+      <polyline points="12,22 19,29 32,15" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(180, 70)" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif">
+    <text x="0" y="36" font-size="44" font-weight="700" fill="#ffffff" letter-spacing="-1">Interviewly</text>
+    <text x="0" y="64" font-size="14" font-weight="500" fill="url(#accent)" letter-spacing="2">AI INTERVIEW SCHEDULER · BIAS MITIGATION</text>
+    <!-- Feature pills -->
+    <g transform="translate(0, 80)" font-size="11" font-weight="500">
+      <g>
+        <rect x="0" y="0" width="92" height="22" rx="11" fill="#5e6ad2" opacity="0.18"/>
+        <text x="46" y="15" text-anchor="middle" fill="#a5acef">Calendar Intel</text>
+      </g>
+      <g transform="translate(100, 0)">
+        <rect x="0" y="0" width="86" height="22" rx="11" fill="#10b981" opacity="0.18"/>
+        <text x="43" y="15" text-anchor="middle" fill="#5fd4a8">Blind Review</text>
+      </g>
+      <g transform="translate(194, 0)">
+        <rect x="0" y="0" width="78" height="22" rx="11" fill="#f59e0b" opacity="0.18"/>
+        <text x="39" y="15" text-anchor="middle" fill="#f5b94d">Bias Lab</text>
+      </g>
+      <g transform="translate(280, 0)">
+        <rect x="0" y="0" width="98" height="22" rx="11" fill="#0ea5e9" opacity="0.18"/>
+        <text x="49" y="15" text-anchor="middle" fill="#5dc3ee">6 Stage Rubric</text>
+      </g>
+    </g>
+  </g>
+</svg>
