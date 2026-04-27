@@ -113,6 +113,33 @@ A centralized intake meeting platform that streamlines the recruiter-hiring mana
 
 ---
 
+### 6. Interviewly — AI Interview Scheduler
+
+[![Interviewly](https://github.com/100rabs/Claude-TA/raw/main/assets/claude-ta-banner.svg)](/100rabs/Claude-TA/blob/main/interview-scheduler)
+
+A full-stack interview management platform with first-class bias mitigation and calendar intelligence — schedules panels by computing overlapping availability across calendars, runs every feedback submission through a bias lexicon, and surfaces panel disagreements before they bias decisions.
+
+**What it does:**
+
+* Schedules interviews by finding overlapping free/busy windows across multi-panel calendars
+* Enforces blind review for panelists until feedback is submitted
+* Runs every written feedback through a 7-category bias lexicon scan
+* Detects panel disagreements (score spread + conflicting recommendations)
+* Surfaces anonymised panelist calibration (lenient vs. harsh) and aggregate diversity pass-through
+
+**Key Features:**
+
+* Six configurable interview stages (screening → R1 → R2 → R3 → presentation → hiring manager)
+* Overlapping-availability slot finder with mock Google Calendar / Outlook providers
+* Structured rubric scoring gate — free-text locks until all criteria are scored
+* Bias Lab with six dashboards: Flagged Feedback, Blind Review, Calibration, Panel Consistency, Diversity Signal, Rubrics
+* Role switcher (Recruiter / Panel / Candidate) with auto-blind-review for panelists
+* Single-file HTML prototype for zero-install demos
+* Full React + FastAPI + Postgres stack behind Docker Compose for production builds
+* Pluggable Protocol-based provider layer (Calendar, Email, Bias detection, Transcription)
+
+---
+
 ## Tech Stack
 
 | Layer | Technologies |
@@ -136,6 +163,7 @@ Claude-TA/
 ├── linkedin-candidate-scorer/         # Project 3 — LinkedIn Candidate Scorer
 ├── recruiterkeys-extension/           # Project 4 — RecruiterKeys Communication Platform
 └── intake-meeting-recruiter-hub/      # Project 5 — Intake Meeting — Recruiter Hub
+└── interview-scheduler/               # Project 6 — AI Interview Scheduler with bias mitigation
 ```
 
 ---
