@@ -1,0 +1,2305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interviewly — AI Interview Scheduler</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --accent: #5e6ad2;
+    --accent-50: #eef0fb;
+    --accent-100: #dcdff7;
+    --bg: #ffffff;
+    --surface: #fafafa;
+    --surface-2: #f4f4f5;
+    --border: #e6e6e8;
+    --border-strong: #d4d4d8;
+    --text: #0f0f10;
+    --text-2: #52525b;
+    --text-3: #a1a1aa;
+    --success: #10b981;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --info: #0ea5e9;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  .card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+  .chip-accent { background: var(--accent-50); color: var(--accent); border-color: var(--accent-100); }
+  .chip-success { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+  .chip-warn { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+  .chip-danger { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .chip-info { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; border: 1px solid var(--border-strong); background: var(--bg); color: var(--text); cursor: pointer; transition: all .12s ease; }
+  .btn:hover { background: var(--surface); }
+  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .btn-primary:hover { background: #4c54b8; border-color: #4c54b8; }
+  .btn-ghost { border-color: transparent; background: transparent; }
+  .btn-ghost:hover { background: var(--surface-2); }
+  .btn-sm { padding: 4px 8px; font-size: 12px; }
+  .btn-danger { color: var(--danger); border-color: #fecaca; }
+  .btn-danger:hover { background: #fef2f2; }
+  .input, .select, .textarea { width: 100%; padding: 7px 10px; font-size: 13px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--bg); color: var(--text); font-family: inherit; }
+  .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-50); }
+  .textarea { resize: vertical; min-height: 80px; }
+  .kbd { font-family: ui-monospace, monospace; font-size: 11px; padding: 1px 5px; background: var(--surface-2); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 4px; color: var(--text-2); }
+  .divider { height: 1px; background: var(--border); }
+  .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 6px; color: var(--text-2); font-weight: 500; font-size: 13px; cursor: pointer; }
+  .sidebar-item:hover { background: var(--surface-2); color: var(--text); }
+  .sidebar-item.active { background: var(--accent-50); color: var(--accent); }
+  .sidebar-item svg { width: 16px; height: 16px; }
+  .kanban-col { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; min-width: 260px; }
+  .kanban-card { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; transition: all .12s; }
+  .kanban-card:hover { border-color: var(--border-strong); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+  .avatar { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; font-size: 11px; font-weight: 600; color: white; flex-shrink: 0; }
+  .avatar-sm { width: 22px; height: 22px; font-size: 10px; }
+  .avatar-lg { width: 40px; height: 40px; font-size: 14px; }
+  table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data th { text-align: left; font-weight: 500; color: var(--text-2); padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  table.data td { padding: 11px 12px; border-bottom: 1px solid var(--border); }
+  table.data tbody tr { cursor: pointer; }
+  table.data tbody tr:hover { background: var(--surface); }
+  .metric { padding: 16px; }
+  .metric-label { font-size: 12px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 500; }
+  .metric-value { font-size: 26px; font-weight: 600; margin-top: 4px; letter-spacing: -0.02em; }
+  .metric-delta { font-size: 12px; margin-top: 4px; color: var(--text-2); }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(15,15,16,.4); backdrop-filter: blur(4px); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal { background: white; border-radius: 12px; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.18); }
+  .modal-lg { max-width: 920px; }
+  .modal-xl { max-width: 1100px; }
+  .tab { padding: 8px 14px; border-radius: 7px; font-size: 13px; color: var(--text-2); cursor: pointer; font-weight: 500; }
+  .tab:hover { background: var(--surface-2); color: var(--text); }
+  .tab.active { background: var(--surface-2); color: var(--text); }
+  .dot { width: 6px; height: 6px; border-radius: 999px; display: inline-block; }
+  .slot-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; cursor: pointer; transition: all .12s; }
+  .slot-card:hover { border-color: var(--accent); }
+  .slot-card.selected { border-color: var(--accent); background: var(--accent-50); }
+  .rubric-cell { padding: 10px; border: 1px solid var(--border); border-radius: 6px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .rubric-cell:hover { border-color: var(--accent); background: var(--accent-50); color: var(--accent); }
+  .rubric-cell.selected { border-color: var(--accent); background: var(--accent); color: white; }
+  .banner { padding: 10px 14px; border-radius: 8px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+  .banner-warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+  .banner-info { background: #f0f9ff; border: 1px solid #bae6fd; color: #075985; }
+  .banner-danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .banner-success { background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+  .highlight-bias { background: #fff3cd; border-bottom: 2px dotted #b45309; padding: 0 2px; border-radius: 2px; cursor: help; }
+  .scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+  .anim-fade { animation: fade .18s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .role-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-strong); }
+  .role-pill.active { background: var(--text); color: white; border-color: var(--text); }
+  .progress { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .progress-bar { height: 100%; background: var(--accent); border-radius: 999px; transition: width .3s; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .blind { filter: blur(6px); user-select: none; color: transparent !important; background: var(--surface-2) !important; border-radius: 4px; }
+  .blind::before { content: "••••••••"; filter: none; color: var(--text-3); font-weight: 600; letter-spacing: 2px; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 12px 18px; border-radius: 8px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.2); z-index: 100; animation: fade .2s ease; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+/* ==========================================================================
+   INTERVIEWLY — AI INTERVIEW SCHEDULER
+   High-fidelity single-file prototype
+   ========================================================================== */
+
+/* ---------- ICONS (inline SVG) ---------- */
+const ICON = {
+  dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+  briefcase: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeoff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+  mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+  filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>',
+};
+
+/* ---------- DEMO DATA ---------- */
+const AVATAR_COLORS = ["#5e6ad2","#10b981","#f59e0b","#ef4444","#0ea5e9","#8b5cf6","#ec4899","#14b8a6","#6366f1","#84cc16"];
+function initials(name) { return name.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase(); }
+function avatarColor(name) { let h = 0; for (const c of name) h = (h*31 + c.charCodeAt(0)) | 0; return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]; }
+
+const STAGES = [
+  { id: "screening", name: "Screening Call", duration: 30, format: "video", order: 1 },
+  { id: "r1", name: "Onsite — Round 1", duration: 60, format: "video", order: 2 },
+  { id: "r2", name: "Onsite — Round 2", duration: 60, format: "video", order: 3 },
+  { id: "r3", name: "Onsite — Round 3", duration: 60, format: "video", order: 4 },
+  { id: "presentation", name: "Presentation Round", duration: 90, format: "video", order: 5 },
+  { id: "hm", name: "Hiring Manager", duration: 45, format: "video", order: 6 },
+];
+
+const PANELS = [
+  { id: "p1", name: "Priya Sharma", title: "Principal Engineer", level: "L6", dept: "Platform", location: "Bangalore", company: "First.Tech", calendar: "google" },
+  { id: "p2", name: "Marcus Chen", title: "Staff Engineer", level: "L5", dept: "Platform", location: "Singapore", company: "First.Tech", calendar: "google" },
+  { id: "p3", name: "Sofia Alvarez", title: "Engineering Manager", level: "L6", dept: "Product Eng", location: "London", company: "First.Tech", calendar: "outlook" },
+  { id: "p4", name: "David Okafor", title: "Senior Engineer", level: "L5", dept: "Infrastructure", location: "Remote", company: "First.Tech", calendar: "google" },
+  { id: "p5", name: "Anjali Rao", title: "Director of Engineering", level: "L7", dept: "Platform", location: "Bangalore", company: "First.Tech", calendar: "google" },
+  { id: "p6", name: "Tom Whitfield", title: "Staff Product Designer", level: "L5", dept: "Design", location: "London", company: "First.Tech", calendar: "outlook" },
+  { id: "p7", name: "Yuki Tanaka", title: "Data Science Lead", level: "L6", dept: "Data", location: "Tokyo", company: "First.Tech", calendar: "google" },
+  { id: "p8", name: "Rachel Kim", title: "VP Engineering", level: "L8", dept: "Platform", location: "San Francisco", company: "First.Tech", calendar: "google" },
+];
+
+const JOBS = [
+  {
+    id: "j1",
+    title: "Staff Software Engineer, Platform",
+    department: "Platform",
+    level: "L5",
+    location: "Bangalore / Remote",
+    hm: "p5",
+    status: "open",
+    openings: 2,
+    jd: `<p>We're hiring a <strong>Staff Software Engineer</strong> to lead architecture and delivery on First.Tech's core Platform team. You'll own systems that process billions of events per day and are used by every product surface.</p><p><strong>What you'll do</strong></p><ul><li>Design and build high-scale distributed systems in Go and Rust</li><li>Mentor senior engineers across 3 squads</li><li>Partner with product and design on roadmap</li><li>Drive technical decisions with cross-org impact</li></ul><p><strong>You should have</strong></p><ul><li>8+ years building production backend systems</li><li>Deep experience with distributed systems, databases, and event streaming</li><li>Demonstrable impact at L5/Staff+ level at a comparable company</li><li>Strong written communication and technical leadership</li></ul>`,
+    stageConfig: {
+      "screening": { panel: ["p2"], duration: 30, format: "video", focus: "Scope, motivation, high-level background", presentation: false },
+      "r1": { panel: ["p1"], duration: 60, format: "video", focus: "System design at scale — assess L5 architecture depth", presentation: false },
+      "r2": { panel: ["p2","p4"], duration: 60, format: "video", focus: "Deep technical — distributed systems, DB internals", presentation: false },
+      "r3": { panel: ["p3"], duration: 60, format: "video", focus: "Behavioural + leadership principles at Staff level", presentation: false },
+      "presentation": { panel: ["p1","p5","p3"], duration: 90, format: "video", focus: "Technical presentation on past L5 work + Q&A", presentation: true },
+      "hm": { panel: ["p5"], duration: 45, format: "video", focus: "Team fit, vision alignment, close", presentation: false },
+    },
+  },
+  {
+    id: "j2",
+    title: "Senior Product Designer",
+    department: "Design",
+    level: "L5",
+    location: "London",
+    hm: "p6",
+    status: "open",
+    openings: 1,
+    jd: `<p>Join our Design team to own the end-to-end experience for our flagship product. You'll partner closely with engineering and product leadership.</p><p><strong>Requirements</strong></p><ul><li>6+ years of product design experience</li><li>Portfolio showing systems thinking and craft</li><li>Experience shipping at scale in B2B SaaS</li></ul>`,
+    stageConfig: {
+      "screening": { panel: ["p6"], duration: 30, format: "video", focus: "Portfolio walk-through + role fit", presentation: false },
+      "r1": { panel: ["p6"], duration: 60, format: "video", focus: "Design critique exercise", presentation: false },
+      "r2": { panel: ["p3"], duration: 60, format: "video", focus: "Cross-functional collaboration", presentation: false },
+      "presentation": { panel: ["p6","p3"], duration: 90, format: "video", focus: "Design presentation on a past shipped project", presentation: true },
+      "hm": { panel: ["p6"], duration: 45, format: "video", focus: "Final alignment", presentation: false },
+    },
+  },
+  {
+    id: "j3",
+    title: "Machine Learning Engineer",
+    department: "Data",
+    level: "L4",
+    location: "Remote",
+    hm: "p7",
+    status: "open",
+    openings: 3,
+    jd: `<p>Build ML systems that power recommendation and personalisation at First.Tech.</p><ul><li>4+ years ML engineering (not just research)</li><li>Strong Python + one of PyTorch/TensorFlow</li><li>Production ML pipelines on cloud infra</li></ul>`,
+    stageConfig: {
+      "screening": { panel: ["p7"], duration: 30, format: "video", focus: "Background + motivation", presentation: false },
+      "r1": { panel: ["p7","p4"], duration: 60, format: "video", focus: "ML fundamentals + coding", presentation: false },
+      "r2": { panel: ["p2"], duration: 60, format: "video", focus: "System design for ML", presentation: false },
+      "hm": { panel: ["p7"], duration: 45, format: "video", focus: "Team fit", presentation: false },
+    },
+  },
+];
+
+function daysFromNow(n, hours=10, minutes=0) {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  d.setHours(hours, minutes, 0, 0);
+  // Skip weekends
+  while (d.getDay() === 0 || d.getDay() === 6) { d.setDate(d.getDate() + 1); }
+  return d;
+}
+
+const CANDIDATES = [
+  { id: "c1", jobId: "j1", name: "Aisha Patel", email: "aisha.patel@email.com", linkedin: "linkedin.com/in/aishapatel", stage: "r2", appliedAt: daysFromNow(-14), gender: "F", ethnicity: "South Asian", resume: "aisha-patel-resume.pdf",
+    experience: "10 years — Senior Staff Engineer at Netflix (4y), Staff at Uber (3y), Senior at Microsoft (3y). MS CS Stanford.",
+    rescheduleCount: 0 },
+  { id: "c2", jobId: "j1", name: "Jordan Müller", email: "jordan.m@email.com", linkedin: "linkedin.com/in/jordanmueller", stage: "r1", appliedAt: daysFromNow(-11), gender: "M", ethnicity: "White", resume: "jordan-mueller-resume.pdf",
+    experience: "9 years — Staff at Stripe (3y), Senior at Shopify (4y), Engineer at Amazon (2y). BS Waterloo.",
+    rescheduleCount: 0 },
+  { id: "c3", jobId: "j1", name: "Kenji Hayashi", email: "kenji.h@email.com", linkedin: "linkedin.com/in/kenjihayashi", stage: "screening", appliedAt: daysFromNow(-5), gender: "M", ethnicity: "East Asian", resume: "kenji-hayashi-resume.pdf",
+    experience: "11 years — Principal at Google (5y), Staff at LinkedIn (3y), Engineer at startups. PhD Tokyo.",
+    rescheduleCount: 1 },
+  { id: "c4", jobId: "j1", name: "Fatima Al-Rashid", email: "fatima.ar@email.com", linkedin: "linkedin.com/in/fatimaalrashid", stage: "presentation", appliedAt: daysFromNow(-22), gender: "F", ethnicity: "Middle Eastern", resume: "fatima-alrashid-resume.pdf",
+    experience: "12 years — Staff at Databricks (4y), Senior at Confluent (4y), Engineer at IBM (4y). MS CMU.",
+    rescheduleCount: 0 },
+  { id: "c5", jobId: "j1", name: "Michael Thompson", email: "mthompson@email.com", linkedin: "linkedin.com/in/mthompson", stage: "hm", appliedAt: daysFromNow(-28), gender: "M", ethnicity: "White", resume: "mthompson-resume.pdf",
+    experience: "14 years — Staff at Meta (6y), Senior at Twitter (4y), Engineer at Yahoo (4y). BS Berkeley.",
+    rescheduleCount: 2 },
+  { id: "c6", jobId: "j1", name: "Elena Rodriguez", email: "elena.r@email.com", linkedin: "linkedin.com/in/elenarodriguez", stage: "r3", appliedAt: daysFromNow(-16), gender: "F", ethnicity: "Hispanic", resume: "elena-rodriguez-resume.pdf",
+    experience: "9 years — Senior Staff at Airbnb (3y), Staff at Pinterest (3y), Senior at Salesforce (3y). BS Tec de Monterrey.",
+    rescheduleCount: 0 },
+  { id: "c7", jobId: "j2", name: "Liam O'Connor", email: "liam.oc@email.com", linkedin: "linkedin.com/in/liamoconnor", stage: "r1", appliedAt: daysFromNow(-7), gender: "M", ethnicity: "White", resume: "liam-oconnor-portfolio.pdf",
+    experience: "7 years — Senior Designer at Figma (3y), Designer at Monzo (4y). BA RCA.",
+    rescheduleCount: 0 },
+  { id: "c8", jobId: "j2", name: "Nadia Ibrahim", email: "nadia.i@email.com", linkedin: "linkedin.com/in/nadiaibrahim", stage: "screening", appliedAt: daysFromNow(-3), gender: "F", ethnicity: "Middle Eastern", resume: "nadia-ibrahim-portfolio.pdf",
+    experience: "6 years — Product Designer at Spotify (3y), Designer at Deliveroo (3y). MA Central Saint Martins.",
+    rescheduleCount: 0 },
+  { id: "c9", jobId: "j3", name: "Raj Venkatesan", email: "raj.v@email.com", linkedin: "linkedin.com/in/rajv", stage: "r1", appliedAt: daysFromNow(-8), gender: "M", ethnicity: "South Asian", resume: "raj-venkatesan-resume.pdf",
+    experience: "5 years — ML Engineer at Stripe (2y), Data Scientist at Ola (3y). MS IISc.",
+    rescheduleCount: 0 },
+  { id: "c10", jobId: "j3", name: "Chloé Dubois", email: "chloe.d@email.com", linkedin: "linkedin.com/in/chloedubois", stage: "screening", appliedAt: daysFromNow(-2), gender: "F", ethnicity: "White", resume: "chloe-dubois-resume.pdf",
+    experience: "4 years — ML Engineer at Doctolib (2y), Research at INRIA (2y). PhD École Polytechnique.",
+    rescheduleCount: 0 },
+  { id: "c11", jobId: "j1", name: "Samuel Adeyemi", email: "sam.a@email.com", linkedin: "linkedin.com/in/samadeyemi", stage: "rejected", appliedAt: daysFromNow(-30), gender: "M", ethnicity: "Black", resume: "sam-adeyemi-resume.pdf",
+    experience: "8 years — Staff at Flutterwave (3y), Senior at Andela (5y). BS University of Lagos.",
+    rescheduleCount: 0 },
+  { id: "c12", jobId: "j1", name: "Wei Zhang", email: "wei.z@email.com", linkedin: "linkedin.com/in/weizhang", stage: "offer", appliedAt: daysFromNow(-35), gender: "F", ethnicity: "East Asian", resume: "wei-zhang-resume.pdf",
+    experience: "11 years — Staff at ByteDance (4y), Senior at Alibaba (4y), Engineer at Tencent (3y). MS Tsinghua.",
+    rescheduleCount: 1 },
+];
+
+/* ---------- INTERVIEWS ---------- */
+const INTERVIEWS = [
+  { id: "i1", candidateId: "c1", jobId: "j1", stageId: "r1", status: "completed", scheduledAt: daysFromNow(-3, 14), panelIds: ["p1"], meetLink: "meet.google.com/abc-defg-hij", notes: "", feedback: [
+    { panelId: "p1", submittedAt: daysFromNow(-3, 15, 30), recommendation: "strong_yes", scores: { "System Design": 4, "Problem Solving": 4, "Communication": 5, "Leadership": 4 }, freeText: "Aisha was outstanding. She walked through a complex event-streaming architecture from first principles. Her tradeoff analysis was sharp and she handled follow-up questions with ease. Clear L5 signal.", biasFlags: [] },
+  ]},
+  { id: "i2", candidateId: "c1", jobId: "j1", stageId: "r2", status: "scheduled", scheduledAt: daysFromNow(1, 10), panelIds: ["p2","p4"], meetLink: "meet.google.com/xyz-uvw-rst", notes: "Focus on distributed systems depth — she has strong Netflix experience with their Hollow framework.", feedback: []},
+  { id: "i3", candidateId: "c2", jobId: "j1", stageId: "r1", status: "scheduled", scheduledAt: daysFromNow(2, 15), panelIds: ["p1"], meetLink: "meet.google.com/aaa-bbb-ccc", notes: "", feedback: []},
+  { id: "i4", candidateId: "c4", jobId: "j1", stageId: "r3", status: "completed", scheduledAt: daysFromNow(-5, 11), panelIds: ["p3"], meetLink: "meet.google.com/ddd-eee-fff", notes: "", feedback: [
+    { panelId: "p3", submittedAt: daysFromNow(-5, 12), recommendation: "yes", scores: { "Leadership": 4, "Ownership": 4, "Communication": 3, "Impact": 4 }, freeText: "Fatima demonstrated strong leadership principles. She led through clear ownership on the database migration story she walked us through. Minor concerns on communication clarity under pressure but nothing blocking.", biasFlags: [] },
+  ]},
+  { id: "i5", candidateId: "c4", jobId: "j1", stageId: "presentation", status: "scheduled", scheduledAt: daysFromNow(3, 14), panelIds: ["p1","p5","p3"], meetLink: "meet.google.com/pres-aaa-bbb", notes: "Fatima is presenting her work on Databricks' query optimizer. Panel to press hard on technical depth.", feedback: []},
+  { id: "i6", candidateId: "c5", jobId: "j1", stageId: "hm", status: "scheduled", scheduledAt: daysFromNow(1, 16), panelIds: ["p5"], meetLink: "meet.google.com/hm-michael", notes: "Final round — Anjali to close on role scope, comp expectations, start date.", feedback: []},
+  { id: "i7", candidateId: "c3", jobId: "j1", stageId: "screening", status: "scheduled", scheduledAt: daysFromNow(4, 10, 30), panelIds: ["p2"], meetLink: "meet.google.com/scr-kenji", notes: "", feedback: []},
+  { id: "i8", candidateId: "c12", jobId: "j1", stageId: "hm", status: "completed", scheduledAt: daysFromNow(-2, 10), panelIds: ["p5"], meetLink: "meet.google.com/wei-hm", notes: "", feedback: [
+    { panelId: "p5", submittedAt: daysFromNow(-2, 11), recommendation: "strong_yes", scores: { "Leadership": 5, "Ownership": 5, "Communication": 4, "Impact": 5 }, freeText: "Wei is exactly who we want. Technical bar is clearly above L5, she'll land as Staff+ quickly. Extend offer.", biasFlags: [] },
+  ]},
+  { id: "i9", candidateId: "c6", jobId: "j1", stageId: "r2", status: "completed", scheduledAt: daysFromNow(-6, 15), panelIds: ["p2","p4"], meetLink: "meet.google.com/elena-r2", notes: "", feedback: [
+    { panelId: "p2", submittedAt: daysFromNow(-6, 16), recommendation: "strong_yes", scores: { "System Design": 5, "Problem Solving": 5, "Communication": 4, "Leadership": 4 }, freeText: "Elena's architecture chops are top 1%. She designed a full tiered-storage system end-to-end, anticipated every edge case, and her code quality was excellent.", biasFlags: [] },
+    { panelId: "p4", submittedAt: daysFromNow(-6, 16, 15), recommendation: "no", scores: { "System Design": 2, "Problem Solving": 2, "Communication": 3, "Leadership": 2 }, freeText: "She seemed a bit too confident and pushy. Not sure she'd be a culture fit with our team — we tend to be more low-key. Her answers were good but her style felt aggressive.", biasFlags: ["aggressive","culture fit","too confident"] },
+  ]},
+  { id: "i10", candidateId: "c7", jobId: "j2", stageId: "r1", status: "scheduled", scheduledAt: daysFromNow(2, 11), panelIds: ["p6"], meetLink: "meet.google.com/liam-r1", notes: "", feedback: []},
+];
+
+/* ---------- BIAS LEXICON ---------- */
+const BIAS_LEXICON = {
+  "culture-fit": { pattern: /\b(culture fit|cultural fit|not a fit|vibe|chemistry|clicked|didn't click|one of us)\b/gi, severity: "high", note: "Vague 'culture' language often masks in-group bias — tie feedback to specific behaviours instead." },
+  "gender-coded": { pattern: /\b(aggressive|abrasive|bossy|pushy|shrill|emotional|nurturing|pleasant|bubbly|gentle)\b/gi, severity: "high", note: "These adjectives are empirically applied asymmetrically to women in reviews." },
+  "age-coded": { pattern: /\b(young|energetic|digital native|seasoned|mature|old school|fresh|veteran)\b/gi, severity: "medium", note: "Age-coded terms can introduce age bias. Describe skills and energy patterns concretely." },
+  "confidence-bias": { pattern: /\b(too confident|too quiet|overly assertive|timid|arrogant|humble to a fault)\b/gi, severity: "medium", note: "Confidence calibration is often subjective; anchor to observed behaviours (e.g. 'did not seek input')." },
+  "likability": { pattern: /\b(likable|likeable|friendly|nice person|personable|pleasant to work with)\b/gi, severity: "low", note: "'Likability' is weakly correlated with performance. Prefer: 'collaborates effectively because...' with evidence." },
+  "name-pedigree": { pattern: /\b(ivy league|tier-1 school|pedigree|brand name|no-name school)\b/gi, severity: "high", note: "School brand bias — focus on demonstrated skills, not institutional prestige." },
+  "appearance": { pattern: /\b(polished|well-dressed|professional appearance|unkempt|sloppy)\b/gi, severity: "medium", note: "Appearance signals are rarely relevant to job performance." },
+};
+
+function runBiasScan(text) {
+  const flags = [];
+  for (const [cat, { pattern, severity, note }] of Object.entries(BIAS_LEXICON)) {
+    const matches = [...text.matchAll(pattern)];
+    if (matches.length > 0) {
+      flags.push({ category: cat, severity, note, hits: matches.map(m => m[0]) });
+    }
+  }
+  return flags;
+}
+
+/* ---------- CALENDAR MOCK ---------- */
+// Build free/busy data: block random hours; free slots are the gaps.
+function seededRandom(seed) {
+  let x = seed;
+  return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; };
+}
+
+function generateBusyForPanel(panelId) {
+  const rand = seededRandom(panelId.split("").reduce((a,c) => a + c.charCodeAt(0), 0));
+  const busy = [];
+  for (let d = 0; d < 10; d++) {
+    const date = daysFromNow(d+1, 0);
+    if (date.getDay() === 0 || date.getDay() === 6) continue;
+    // Generate 2-5 busy blocks in 9am-6pm
+    const n = 2 + Math.floor(rand() * 4);
+    for (let i = 0; i < n; i++) {
+      const h = 9 + Math.floor(rand() * 9);
+      const len = [30,60,60,60,90][Math.floor(rand()*5)];
+      const start = new Date(date); start.setHours(h, rand() > 0.5 ? 0 : 30, 0, 0);
+      const end = new Date(start.getTime() + len * 60000);
+      busy.push({ start, end });
+    }
+  }
+  return busy;
+}
+
+const CALENDAR_BUSY = {};
+PANELS.forEach(p => { CALENDAR_BUSY[p.id] = generateBusyForPanel(p.id); });
+
+function findOverlappingSlots(panelIds, durationMin, daysAhead=10) {
+  const slots = [];
+  for (let d = 1; d <= daysAhead; d++) {
+    const date = daysFromNow(d, 0);
+    if (date.getDay() === 0 || date.getDay() === 6) continue;
+    // Check 9am to 5pm in 30min increments
+    for (let h = 9; h < 17; h++) {
+      for (let m of [0, 30]) {
+        const start = new Date(date); start.setHours(h, m, 0, 0);
+        const end = new Date(start.getTime() + durationMin * 60000);
+        if (end.getHours() > 17 || (end.getHours() === 17 && end.getMinutes() > 0)) continue;
+        let ok = true;
+        for (const pid of panelIds) {
+          const busy = CALENDAR_BUSY[pid] || [];
+          for (const b of busy) {
+            if (b.start < end && b.end > start) { ok = false; break; }
+          }
+          if (!ok) break;
+        }
+        if (ok) slots.push({ start, end });
+      }
+    }
+  }
+  return slots;
+}
+
+/* ---------- STATE ---------- */
+const state = {
+  view: "dashboard",           // dashboard | jobs | job | candidates | candidate | panel | interviews | interview | bias | settings
+  currentJobId: null,
+  currentCandidateId: null,
+  currentInterviewId: null,
+  role: "recruiter",           // recruiter | panel | candidate
+  modal: null,                 // { type, data }
+  toast: null,
+  kanbanJobFilter: "all",
+  biasTab: "flags",
+  calibrationBlind: true,
+  schedulingState: null,       // for scheduler wizard
+};
+
+/* ---------- UTIL ---------- */
+function fmtDate(d, opts={}) {
+  if (!(d instanceof Date)) d = new Date(d);
+  const o = { weekday: 'short', month: 'short', day: 'numeric', ...opts };
+  return d.toLocaleDateString('en-US', o);
+}
+function fmtTime(d) {
+  if (!(d instanceof Date)) d = new Date(d);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+function fmtDateTime(d) { return fmtDate(d) + " · " + fmtTime(d); }
+function relativeTime(d) {
+  if (!(d instanceof Date)) d = new Date(d);
+  const diffMs = d.getTime() - Date.now();
+  const absH = Math.abs(diffMs) / 36e5;
+  const sign = diffMs >= 0 ? "in " : "";
+  const suffix = diffMs < 0 ? " ago" : "";
+  if (absH < 1) { const m = Math.round(Math.abs(diffMs) / 60000); return sign + m + "m" + suffix; }
+  if (absH < 48) { const h = Math.round(absH); return sign + h + "h" + suffix; }
+  const days = Math.round(absH / 24);
+  return sign + days + "d" + suffix;
+}
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+function jobById(id) { return JOBS.find(j => j.id === id); }
+function candidateById(id) { return CANDIDATES.find(c => c.id === id); }
+function panelById(id) { return PANELS.find(p => p.id === id); }
+function stageById(id) { return STAGES.find(s => s.id === id); }
+function interviewsByCandidate(cid) { return INTERVIEWS.filter(i => i.candidateId === cid).sort((a,b) => a.scheduledAt - b.scheduledAt); }
+function interviewsForPanel(pid) { return INTERVIEWS.filter(i => i.panelIds.includes(pid)); }
+function candidatesByJob(jid) { return CANDIDATES.filter(c => c.jobId === jid); }
+
+function avatar(nameOrId, sz="") {
+  const p = typeof nameOrId === "string" && nameOrId.startsWith("p") ? panelById(nameOrId) : null;
+  const name = p ? p.name : (candidateById(nameOrId) ? candidateById(nameOrId).name : nameOrId);
+  const initials_ = initials(name);
+  const color = avatarColor(name);
+  return `<span class="avatar ${sz}" style="background:${color}">${initials_}</span>`;
+}
+
+function panelPill(pid) {
+  const p = panelById(pid); if (!p) return "";
+  return `<span class="inline-flex items-center gap-1.5 text-xs">${avatar(pid, "avatar-sm")}<span class="text-[var(--text-2)]">${esc(p.name)}</span></span>`;
+}
+
+function stageChip(stageId) {
+  const s = stageById(stageId); if (!s) return "";
+  return `<span class="chip">${esc(s.name)}</span>`;
+}
+
+function statusChip(status) {
+  const map = { scheduled: ["chip-info", "Scheduled"], completed: ["chip-success", "Completed"], cancelled: ["chip-danger","Cancelled"], pending: ["chip-warn","Pending"] };
+  const [cls, label] = map[status] || ["", status];
+  return `<span class="chip ${cls}">${label}</span>`;
+}
+function pipelineStageChip(stage) {
+  const map = {
+    screening: ["chip-info", "Screening"], r1: ["chip-info", "Round 1"], r2: ["chip-info", "Round 2"],
+    r3: ["chip-info","Round 3"], presentation: ["chip-accent","Presentation"], hm: ["chip-accent","Hiring Mgr"],
+    offer: ["chip-success","Offer"], rejected: ["chip-danger","Rejected"]
+  };
+  const [cls, label] = map[stage] || ["", stage];
+  return `<span class="chip ${cls}">${label}</span>`;
+}
+function recommendationChip(rec) {
+  const map = { strong_yes: ["chip-success","Strong Yes"], yes: ["chip-success","Yes"], no: ["chip-danger","No"], strong_no: ["chip-danger","Strong No"], "": ["","—"] };
+  const [cls, label] = map[rec] || ["", rec];
+  return `<span class="chip ${cls}">${label}</span>`;
+}
+
+/* ---------- RENDER: APP SHELL ---------- */
+function renderApp() {
+  const root = document.getElementById("app");
+  if (state.role === "recruiter") {
+    root.innerHTML = renderRecruiterShell();
+  } else if (state.role === "panel") {
+    root.innerHTML = renderPanelShell();
+  } else {
+    root.innerHTML = renderCandidateShell();
+  }
+  renderModal();
+}
+
+function renderRecruiterShell() {
+  return `
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <aside class="w-60 border-r border-[var(--border)] bg-[var(--surface)] flex flex-col flex-shrink-0">
+        <div class="px-4 py-4 border-b border-[var(--border)] flex items-center gap-2">
+          <div class="w-7 h-7 rounded-md bg-[var(--accent)] text-white flex items-center justify-center text-sm font-bold">I</div>
+          <div>
+            <div class="font-semibold tracking-tight">Interviewly</div>
+            <div class="text-[11px] text-[var(--text-3)]">First.Tech · Recruiter</div>
+          </div>
+        </div>
+        <nav class="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+          ${navItem("dashboard", "Dashboard", ICON.dashboard)}
+          ${navItem("jobs", "Jobs", ICON.briefcase)}
+          ${navItem("candidates", "Candidates", ICON.user)}
+          ${navItem("panel", "Panel", ICON.users)}
+          ${navItem("interviews", "Interviews", ICON.calendar)}
+          <div class="pt-2 pb-1 px-3 text-[11px] uppercase tracking-wide text-[var(--text-3)]">Intelligence</div>
+          ${navItem("bias", "Bias Lab", ICON.shield)}
+          <div class="pt-2 pb-1 px-3 text-[11px] uppercase tracking-wide text-[var(--text-3)]">Admin</div>
+          ${navItem("settings", "Settings", ICON.settings)}
+        </nav>
+        <div class="p-3 border-t border-[var(--border)]">
+          ${roleSwitcher()}
+        </div>
+      </aside>
+      <!-- Main -->
+      <main class="flex-1 overflow-y-auto bg-white">
+        <div class="anim-fade">${renderMainView()}</div>
+      </main>
+    </div>
+  `;
+}
+
+function navItem(view, label, icon) {
+  const active = state.view === view || (view === "jobs" && state.view === "job") || (view === "candidates" && state.view === "candidate") || (view === "interviews" && state.view === "interview");
+  return `<div class="sidebar-item ${active ? "active" : ""}" onclick="nav('${view}')">${icon}<span>${label}</span></div>`;
+}
+
+function roleSwitcher() {
+  return `
+    <div class="text-[11px] uppercase tracking-wide text-[var(--text-3)] mb-1.5 px-1">View As</div>
+    <div class="flex gap-1">
+      <span class="role-pill ${state.role==='recruiter'?'active':''}" onclick="setRole('recruiter')">Recruiter</span>
+      <span class="role-pill ${state.role==='panel'?'active':''}" onclick="setRole('panel')">Panel</span>
+      <span class="role-pill ${state.role==='candidate'?'active':''}" onclick="setRole('candidate')">Candidate</span>
+    </div>
+  `;
+}
+
+function renderMainView() {
+  switch (state.view) {
+    case "dashboard": return renderDashboard();
+    case "jobs": return renderJobs();
+    case "job": return renderJobDetail();
+    case "candidates": return renderCandidates();
+    case "candidate": return renderCandidateDetail();
+    case "panel": return renderPanel();
+    case "interviews": return renderInterviews();
+    case "interview": return renderInterviewDetail();
+    case "bias": return renderBiasLab();
+    case "settings": return renderSettings();
+    default: return renderDashboard();
+  }
+}
+
+/* ---------- VIEW: DASHBOARD ---------- */
+function renderDashboard() {
+  const upcoming = INTERVIEWS.filter(i => i.status === "scheduled" && i.scheduledAt > new Date()).sort((a,b) => a.scheduledAt - b.scheduledAt);
+  const pending = buildPendingActions();
+  const totalCands = CANDIDATES.length;
+  const active = CANDIDATES.filter(c => c.stage !== "rejected" && c.stage !== "offer").length;
+  const inInterview = CANDIDATES.filter(c => ["r1","r2","r3","presentation","hm"].includes(c.stage)).length;
+  const offers = CANDIDATES.filter(c => c.stage === "offer").length;
+
+  const allBiasFlags = INTERVIEWS.flatMap(i => i.feedback.filter(f => f.biasFlags.length > 0).map(f => ({ interview: i, feedback: f })));
+
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      ${topBar("Dashboard", "Pipeline health at a glance")}
+
+      <div class="grid grid-cols-4 gap-3 mb-6">
+        <div class="card metric">
+          <div class="metric-label">Active Candidates</div>
+          <div class="metric-value">${active}</div>
+          <div class="metric-delta"><span class="text-[var(--success)]">▲ 3</span> this week</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">In Interview</div>
+          <div class="metric-value">${inInterview}</div>
+          <div class="metric-delta">${upcoming.length} scheduled</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">Offers Extended</div>
+          <div class="metric-value">${offers}</div>
+          <div class="metric-delta">1 accepted · 0 pending</div>
+        </div>
+        <div class="card metric">
+          <div class="metric-label">Bias Flags</div>
+          <div class="metric-value">${allBiasFlags.length}</div>
+          <div class="metric-delta text-[var(--danger)]">${allBiasFlags.length > 0 ? 'Needs review' : 'All clear'}</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6">
+        <!-- Upcoming interviews -->
+        <div class="col-span-2 card">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+            <div>
+              <div class="font-semibold">Upcoming Interviews</div>
+              <div class="text-xs text-[var(--text-2)]">Next 7 days</div>
+            </div>
+            <button class="btn btn-sm" onclick="nav('interviews')">View all ${ICON.arrow}</button>
+          </div>
+          <div class="divide-y divide-[var(--border)]">
+            ${upcoming.slice(0, 6).map(i => {
+              const c = candidateById(i.candidateId); const j = jobById(i.jobId); const s = stageById(i.stageId);
+              return `
+                <div class="px-4 py-3 flex items-center gap-3 hover:bg-[var(--surface)] cursor-pointer" onclick="openInterview('${i.id}')">
+                  ${avatar(c.id)}
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium truncate">${esc(c.name)}</div>
+                    <div class="text-xs text-[var(--text-2)] truncate">${esc(j.title)} · ${esc(s.name)}</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-sm font-medium">${fmtDate(i.scheduledAt)}</div>
+                    <div class="text-xs text-[var(--text-2)]">${fmtTime(i.scheduledAt)}</div>
+                  </div>
+                  <div class="flex -space-x-2">
+                    ${i.panelIds.slice(0,3).map(pid => avatar(pid, "avatar-sm")).join("")}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+            ${upcoming.length === 0 ? '<div class="px-4 py-6 text-center text-[var(--text-3)] text-sm">No upcoming interviews</div>' : ''}
+          </div>
+        </div>
+
+        <!-- Pending actions -->
+        <div class="card">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+            <div>
+              <div class="font-semibold">Pending Actions</div>
+              <div class="text-xs text-[var(--text-2)]">Your daily digest</div>
+            </div>
+          </div>
+          <div class="divide-y divide-[var(--border)]">
+            ${pending.map(p => `
+              <div class="px-4 py-3 hover:bg-[var(--surface)] cursor-pointer" onclick="${p.action || ''}">
+                <div class="flex items-start gap-2">
+                  <span class="dot mt-1.5" style="background:${p.color}"></span>
+                  <div class="flex-1">
+                    <div class="text-sm font-medium">${esc(p.title)}</div>
+                    <div class="text-xs text-[var(--text-2)] mt-0.5">${esc(p.detail)}</div>
+                  </div>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversion funnel -->
+      <div class="mt-6 card p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <div class="font-semibold">Stage Conversion</div>
+            <div class="text-xs text-[var(--text-2)]">All jobs · last 90 days</div>
+          </div>
+          <select class="select w-auto text-xs">
+            <option>All jobs</option>
+            ${JOBS.map(j => `<option>${esc(j.title)}</option>`).join("")}
+          </select>
+        </div>
+        ${renderFunnel()}
+      </div>
+    </div>
+  `;
+}
+
+function buildPendingActions() {
+  const acts = [];
+  // Flag reschedule counts
+  CANDIDATES.filter(c => c.rescheduleCount >= 2).forEach(c => {
+    acts.push({ title: "High reschedule count", detail: `${c.name} has rescheduled ${c.rescheduleCount} times`, color: "var(--warn)", action: `openCandidate('${c.id}')` });
+  });
+  // Bias flags
+  INTERVIEWS.forEach(i => {
+    i.feedback.forEach(f => {
+      if (f.biasFlags.length > 0) {
+        const c = candidateById(i.candidateId);
+        acts.push({ title: "Bias flag on feedback", detail: `${c.name} · ${panelById(f.panelId).name} — ${f.biasFlags.length} pattern${f.biasFlags.length > 1 ? 's' : ''} flagged`, color: "var(--danger)", action: `nav('bias')` });
+      }
+    });
+  });
+  // Pending feedback
+  INTERVIEWS.filter(i => i.status === "completed").forEach(i => {
+    const missing = i.panelIds.filter(pid => !i.feedback.find(f => f.panelId === pid));
+    missing.forEach(pid => {
+      const c = candidateById(i.candidateId);
+      acts.push({ title: "Feedback overdue", detail: `${panelById(pid).name} hasn't submitted for ${c.name}`, color: "var(--warn)", action: `openInterview('${i.id}')` });
+    });
+  });
+  // Scheduling needed
+  CANDIDATES.forEach(c => {
+    if (c.stage === "rejected" || c.stage === "offer") return;
+    const last = interviewsByCandidate(c.id).slice(-1)[0];
+    if (!last || last.status === "completed") {
+      const next = STAGES.find(s => s.id === c.stage);
+      if (next) acts.push({ title: "Schedule next round", detail: `${c.name} → ${next.name}`, color: "var(--accent)", action: `openScheduler('${c.id}','${c.stage}')` });
+    }
+  });
+  return acts.slice(0, 8);
+}
+
+function renderFunnel() {
+  const stages = ["screening","r1","r2","r3","presentation","hm","offer"];
+  const byStage = {};
+  // Compute how many candidates have reached each stage (inclusive of beyond)
+  const stageOrder = ["screening","r1","r2","r3","presentation","hm","offer"];
+  stageOrder.forEach(s => byStage[s] = 0);
+  CANDIDATES.forEach(c => {
+    if (c.stage === "rejected") {
+      // attribute to last reached stage via interviews
+      const ivs = interviewsByCandidate(c.id);
+      if (ivs.length > 0) {
+        const last = ivs[ivs.length-1].stageId;
+        const idx = stageOrder.indexOf(last);
+        for (let i = 0; i <= idx; i++) byStage[stageOrder[i]]++;
+      }
+    } else {
+      const idx = stageOrder.indexOf(c.stage);
+      for (let i = 0; i <= idx; i++) byStage[stageOrder[i]]++;
+    }
+  });
+  const max = Math.max(...Object.values(byStage), 1);
+  return `
+    <div class="space-y-2">
+      ${stageOrder.map((s,i) => {
+        const cnt = byStage[s];
+        const prev = i > 0 ? byStage[stageOrder[i-1]] : cnt;
+        const rate = prev > 0 ? Math.round(cnt / prev * 100) : 100;
+        const name = s === "offer" ? "Offer" : stageById(s)?.name || s;
+        return `
+          <div class="flex items-center gap-3">
+            <div class="w-36 text-sm text-[var(--text-2)]">${esc(name)}</div>
+            <div class="flex-1 relative h-7 bg-[var(--surface-2)] rounded overflow-hidden">
+              <div class="h-full bg-[var(--accent)] rounded flex items-center px-2 text-xs text-white font-medium" style="width:${cnt/max*100}%">${cnt}</div>
+            </div>
+            <div class="w-16 text-right text-xs text-[var(--text-2)]">${i > 0 ? rate + "%" : "—"}</div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function topBar(title, subtitle, actions="") {
+  return `
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold tracking-tight">${esc(title)}</h1>
+        ${subtitle ? `<p class="text-sm text-[var(--text-2)] mt-1">${esc(subtitle)}</p>` : ''}
+      </div>
+      <div class="flex items-center gap-2">${actions}</div>
+    </div>
+  `;
+}
+
+/* ---------- VIEW: JOBS ---------- */
+function renderJobs() {
+  const actions = `<button class="btn btn-primary" onclick="toast('Job creation — backend wiring needed')">${ICON.plus}New Job</button>`;
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      ${topBar("Jobs", "Open roles and hiring pipeline", actions)}
+      <div class="card overflow-hidden">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Role</th><th>Department</th><th>Level</th><th>Location</th><th>Candidates</th><th>HM</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${JOBS.map(j => {
+              const cands = candidatesByJob(j.id);
+              const active = cands.filter(c => c.stage !== "rejected" && c.stage !== "offer").length;
+              const hm = panelById(j.hm);
+              return `
+                <tr onclick="openJob('${j.id}')">
+                  <td class="font-medium">${esc(j.title)}</td>
+                  <td>${esc(j.department)}</td>
+                  <td><span class="chip">${esc(j.level)}</span></td>
+                  <td>${esc(j.location)}</td>
+                  <td>${active} active · ${cands.length} total</td>
+                  <td><div class="flex items-center gap-2">${avatar(hm.id,"avatar-sm")}<span>${esc(hm.name)}</span></div></td>
+                  <td><span class="chip chip-success">${esc(j.status)}</span></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- VIEW: JOB DETAIL ---------- */
+function renderJobDetail() {
+  const j = jobById(state.currentJobId); if (!j) return '<div class="p-8">Job not found</div>';
+  const cands = candidatesByJob(j.id);
+  const hm = panelById(j.hm);
+  const stagesInUse = Object.keys(j.stageConfig).sort((a,b) => stageById(a).order - stageById(b).order);
+
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      <div class="flex items-center gap-2 text-sm text-[var(--text-2)] mb-3">
+        <a class="hover:text-[var(--text)] cursor-pointer" onclick="nav('jobs')">Jobs</a>
+        <span>/</span>
+        <span class="text-[var(--text)]">${esc(j.title)}</span>
+      </div>
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">${esc(j.title)}</h1>
+          <div class="flex items-center gap-2 mt-2">
+            <span class="chip">${esc(j.level)}</span>
+            <span class="chip">${esc(j.department)}</span>
+            <span class="chip">${esc(j.location)}</span>
+            <span class="chip">${j.openings} opening${j.openings > 1 ? 's' : ''}</span>
+            <span class="chip chip-success">${esc(j.status)}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn" onclick="toast('Share public JD link copied')">${ICON.link}Share JD</button>
+          <button class="btn btn-primary" onclick="openBulkImport('${j.id}')">${ICON.plus}Add Candidates</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6">
+        <div class="col-span-2 space-y-6">
+          <!-- JD -->
+          <div class="card">
+            <div class="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+              <div class="font-semibold">Job Description</div>
+              <button class="btn btn-ghost btn-sm">Edit</button>
+            </div>
+            <div class="p-5 prose prose-sm max-w-none" style="font-size:14px;line-height:1.65">${j.jd}</div>
+          </div>
+
+          <!-- Pipeline -->
+          <div class="card">
+            <div class="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+              <div class="font-semibold">Pipeline</div>
+              <span class="text-xs text-[var(--text-2)]">${cands.length} candidates</span>
+            </div>
+            <div class="p-4 overflow-x-auto scrollbar-thin">
+              ${renderKanbanForJob(j.id)}
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-6">
+          <!-- HM & Summary -->
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Hiring Manager</div>
+            <div class="flex items-center gap-3">${avatar(hm.id,"avatar-lg")}<div><div class="font-medium">${esc(hm.name)}</div><div class="text-xs text-[var(--text-2)]">${esc(hm.title)}</div></div></div>
+          </div>
+
+          <!-- Stage config -->
+          <div class="card">
+            <div class="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+              <div class="font-semibold">Interview Stages</div>
+              <button class="btn btn-ghost btn-sm" onclick="nav('settings')">Configure</button>
+            </div>
+            <div class="divide-y divide-[var(--border)]">
+              ${stagesInUse.map(sid => {
+                const s = stageById(sid); const cfg = j.stageConfig[sid];
+                return `
+                  <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="font-medium text-sm">${esc(s.name)}</div>
+                      <span class="text-xs text-[var(--text-2)]">${cfg.duration}m · ${cfg.format}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5 mb-2">
+                      ${cfg.panel.map(pid => panelPill(pid)).join(" ")}
+                    </div>
+                    <div class="text-xs text-[var(--text-2)] italic">${esc(cfg.focus)}</div>
+                    ${cfg.presentation ? '<div class="mt-2"><span class="chip chip-warn">Presentation required</span></div>' : ''}
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- VIEW: CANDIDATES ---------- */
+function renderCandidates() {
+  const actions = `
+    <select class="select w-auto" onchange="state.kanbanJobFilter=this.value;renderApp()">
+      <option value="all" ${state.kanbanJobFilter==='all'?'selected':''}>All Jobs</option>
+      ${JOBS.map(j => `<option value="${j.id}" ${state.kanbanJobFilter===j.id?'selected':''}>${esc(j.title)}</option>`).join("")}
+    </select>
+    <button class="btn" onclick="openBulkImport()">${ICON.upload}Bulk Import</button>
+    <button class="btn btn-primary" onclick="toast('Candidate creation — backend wiring needed')">${ICON.plus}Add Candidate</button>
+  `;
+  const filtered = state.kanbanJobFilter === "all" ? CANDIDATES : CANDIDATES.filter(c => c.jobId === state.kanbanJobFilter);
+  return `
+    <div class="px-8 py-6 max-w-[1600px]">
+      ${topBar("Candidates", `${filtered.length} candidates · Kanban view`, actions)}
+      <div class="overflow-x-auto scrollbar-thin -mx-2 px-2">
+        ${renderKanban(filtered)}
+      </div>
+    </div>
+  `;
+}
+
+function renderKanbanForJob(jobId) {
+  return renderKanban(candidatesByJob(jobId));
+}
+
+function renderKanban(candidates) {
+  const cols = [...STAGES.map(s => ({ id: s.id, name: s.name })), { id: "offer", name: "Offer" }, { id: "rejected", name: "Rejected" }];
+  return `
+    <div class="flex gap-3 min-h-[480px]">
+      ${cols.map(col => {
+        const inCol = candidates.filter(c => c.stage === col.id);
+        return `
+          <div class="kanban-col p-3 flex-shrink-0" style="width:260px">
+            <div class="flex items-center justify-between mb-2 px-1">
+              <div class="font-medium text-sm">${esc(col.name)}</div>
+              <span class="text-xs text-[var(--text-3)]">${inCol.length}</span>
+            </div>
+            <div class="space-y-2">
+              ${inCol.map(c => {
+                const j = jobById(c.jobId);
+                const nextIv = interviewsByCandidate(c.id).find(i => i.status === "scheduled");
+                return `
+                  <div class="kanban-card" onclick="openCandidate('${c.id}')">
+                    <div class="flex items-center gap-2 mb-1.5">${avatar(c.id,"avatar-sm")}<div class="font-medium text-sm truncate">${esc(c.name)}</div></div>
+                    <div class="text-xs text-[var(--text-2)] truncate">${esc(j.title)}</div>
+                    ${nextIv ? `<div class="mt-2 text-[11px] text-[var(--info)] flex items-center gap-1">${ICON.calendar}<span>${fmtDate(nextIv.scheduledAt)} ${fmtTime(nextIv.scheduledAt)}</span></div>` : ''}
+                    ${c.rescheduleCount >= 2 ? `<div class="mt-1.5"><span class="chip chip-warn">${c.rescheduleCount} reschedules</span></div>` : ''}
+                  </div>
+                `;
+              }).join("")}
+              ${inCol.length === 0 ? '<div class="text-xs text-[var(--text-3)] italic px-1 py-3">No candidates</div>' : ''}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+/* ---------- VIEW: CANDIDATE DETAIL ---------- */
+function renderCandidateDetail() {
+  const c = candidateById(state.currentCandidateId); if (!c) return '<div class="p-8">Candidate not found</div>';
+  const j = jobById(c.jobId);
+  const ivs = interviewsByCandidate(c.id);
+  const curStage = stageById(c.stage);
+  const stageIdx = STAGES.findIndex(s => s.id === c.stage);
+
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      <div class="flex items-center gap-2 text-sm text-[var(--text-2)] mb-3">
+        <a class="hover:text-[var(--text)] cursor-pointer" onclick="nav('candidates')">Candidates</a>
+        <span>/</span>
+        <a class="hover:text-[var(--text)] cursor-pointer" onclick="openJob('${j.id}')">${esc(j.title)}</a>
+        <span>/</span>
+        <span class="text-[var(--text)]">${esc(c.name)}</span>
+      </div>
+      <div class="flex items-start justify-between mb-6">
+        <div class="flex items-center gap-4">
+          ${avatar(c.id,"avatar-lg")}
+          <div>
+            <h1 class="text-2xl font-semibold tracking-tight">${esc(c.name)}</h1>
+            <div class="text-sm text-[var(--text-2)]">${esc(c.email)} · <a class="text-[var(--accent)]">${esc(c.linkedin)}</a></div>
+            <div class="flex items-center gap-2 mt-2">${pipelineStageChip(c.stage)}<span class="chip">${esc(j.title)}</span></div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn" onclick="toast('Moved to next stage (mock)')">${ICON.arrow}Advance Stage</button>
+          <button class="btn btn-primary" onclick="openScheduler('${c.id}','${c.stage}')">${ICON.calendar}Schedule Next</button>
+        </div>
+      </div>
+
+      <!-- Pipeline progress -->
+      <div class="card p-5 mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="font-semibold text-sm">Pipeline Progress</div>
+          <div class="text-xs text-[var(--text-2)]">${curStage ? curStage.name : c.stage} · ${stageIdx + 1}/${STAGES.length}</div>
+        </div>
+        <div class="flex items-center gap-2">
+          ${STAGES.map((s, i) => {
+            const passed = i < stageIdx;
+            const current = s.id === c.stage;
+            const iv = ivs.find(x => x.stageId === s.id);
+            return `
+              <div class="flex-1">
+                <div class="h-1.5 rounded-full ${passed || current ? 'bg-[var(--accent)]' : 'bg-[var(--surface-2)]'}"></div>
+                <div class="text-[11px] text-[var(--text-2)] mt-1 flex items-center gap-1">
+                  ${current ? '<span class="dot" style="background:var(--accent)"></span>' : ''}
+                  ${esc(s.name)}
+                </div>
+                ${iv ? `<div class="text-[10px] text-[var(--text-3)]">${fmtDate(iv.scheduledAt, {month:'short',day:'numeric'})}</div>` : ''}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6">
+        <div class="col-span-2 space-y-6">
+          <!-- Timeline -->
+          <div class="card">
+            <div class="px-4 py-3 border-b border-[var(--border)] font-semibold">Interview Timeline</div>
+            <div class="divide-y divide-[var(--border)]">
+              ${ivs.length === 0 ? '<div class="p-6 text-center text-[var(--text-3)] text-sm">No interviews scheduled yet</div>' : ''}
+              ${ivs.map(i => {
+                const s = stageById(i.stageId);
+                return `
+                  <div class="p-4 hover:bg-[var(--surface)] cursor-pointer" onclick="openInterview('${i.id}')">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium">${esc(s.name)}</span>
+                          ${statusChip(i.status)}
+                          ${i.feedback.length > 0 ? `<span class="chip">${i.feedback.length} / ${i.panelIds.length} feedback</span>` : ''}
+                          ${i.feedback.some(f => f.biasFlags.length > 0) ? '<span class="chip chip-danger">⚠ Bias flagged</span>' : ''}
+                        </div>
+                        <div class="text-xs text-[var(--text-2)] mt-1">${fmtDateTime(i.scheduledAt)}</div>
+                        <div class="flex gap-1.5 mt-2 flex-wrap">
+                          ${i.panelIds.map(pid => panelPill(pid)).join(" ")}
+                        </div>
+                      </div>
+                      <div class="flex gap-1.5">
+                        ${i.feedback.map(f => recommendationChip(f.recommendation)).join("")}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+
+          <!-- Reschedule log -->
+          ${c.rescheduleCount > 0 ? `
+            <div class="card p-4">
+              <div class="flex items-center gap-2 mb-2"><span class="chip chip-warn">${c.rescheduleCount} reschedule${c.rescheduleCount > 1 ? 's' : ''}</span></div>
+              <div class="text-sm text-[var(--text-2)]">This candidate has rescheduled ${c.rescheduleCount} time${c.rescheduleCount > 1 ? 's' : ''}. ${c.rescheduleCount >= 3 ? '⚠ Flagged for recruiter review.' : 'Normal range.'}</div>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="space-y-6">
+          <!-- Resume -->
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Resume</div>
+            <div class="flex items-center gap-2 p-2 bg-[var(--surface-2)] rounded">${ICON.file}<span class="text-sm flex-1 truncate">${esc(c.resume)}</span><button class="btn btn-sm btn-ghost">View</button></div>
+          </div>
+          <!-- Experience snapshot -->
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Experience Snapshot</div>
+            <div class="text-sm">${esc(c.experience)}</div>
+          </div>
+          <!-- Meta -->
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Application</div>
+            <div class="space-y-1.5 text-sm">
+              <div class="flex justify-between"><span class="text-[var(--text-2)]">Applied</span><span>${fmtDate(c.appliedAt)}</span></div>
+              <div class="flex justify-between"><span class="text-[var(--text-2)]">Source</span><span>LinkedIn</span></div>
+              <div class="flex justify-between"><span class="text-[var(--text-2)]">Days in pipeline</span><span>${Math.abs(Math.round((Date.now() - c.appliedAt.getTime()) / 864e5))}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- VIEW: PANEL LIST ---------- */
+function renderPanel() {
+  const actions = `<button class="btn btn-primary" onclick="toast('Panel member form (mock)')">${ICON.plus}Add Panel Member</button>`;
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      ${topBar("Panel", `${PANELS.length} interviewers · searchable pool`, actions)}
+      <div class="mb-4">
+        <div class="relative" style="max-width:400px">
+          <div class="absolute left-3 top-2.5 text-[var(--text-3)]" style="width:14px;height:14px">${ICON.search}</div>
+          <input class="input" style="padding-left:32px" placeholder="Search panel members…"/>
+        </div>
+      </div>
+      <div class="card overflow-hidden">
+        <table class="data">
+          <thead><tr>
+            <th>Name</th><th>Title</th><th>Level</th><th>Department</th><th>Location</th><th>Calendar</th><th>Upcoming</th>
+          </tr></thead>
+          <tbody>
+            ${PANELS.map(p => {
+              const upcoming = interviewsForPanel(p.id).filter(i => i.status === "scheduled").length;
+              return `
+                <tr onclick="toast('Panel detail (not wired)')">
+                  <td><div class="flex items-center gap-2">${avatar(p.id,"avatar-sm")}<span class="font-medium">${esc(p.name)}</span></div></td>
+                  <td>${esc(p.title)}</td>
+                  <td><span class="chip">${esc(p.level)}</span></td>
+                  <td>${esc(p.dept)}</td>
+                  <td>${esc(p.location)}</td>
+                  <td>
+                    <span class="chip ${p.calendar ? 'chip-success' : 'chip-warn'}">
+                      ${p.calendar ? '<span style="width:10px;height:10px">'+ICON.check+'</span>' : ''}${p.calendar || 'Not connected'}
+                    </span>
+                  </td>
+                  <td>${upcoming} scheduled</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- VIEW: INTERVIEWS ---------- */
+function renderInterviews() {
+  const sorted = [...INTERVIEWS].sort((a,b) => b.scheduledAt - a.scheduledAt);
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      ${topBar("Interviews", `${INTERVIEWS.length} total · all stages`)}
+      <div class="card overflow-hidden">
+        <table class="data">
+          <thead><tr>
+            <th>Candidate</th><th>Role</th><th>Stage</th><th>When</th><th>Panel</th><th>Status</th><th>Feedback</th>
+          </tr></thead>
+          <tbody>
+            ${sorted.map(i => {
+              const c = candidateById(i.candidateId); const j = jobById(i.jobId); const s = stageById(i.stageId);
+              return `
+                <tr onclick="openInterview('${i.id}')">
+                  <td><div class="flex items-center gap-2">${avatar(c.id,"avatar-sm")}<span class="font-medium">${esc(c.name)}</span></div></td>
+                  <td class="text-[var(--text-2)]">${esc(j.title)}</td>
+                  <td>${esc(s.name)}</td>
+                  <td>${fmtDateTime(i.scheduledAt)}</td>
+                  <td><div class="flex -space-x-1.5">${i.panelIds.map(pid => avatar(pid,"avatar-sm")).join("")}</div></td>
+                  <td>${statusChip(i.status)}</td>
+                  <td>
+                    ${i.feedback.length}/${i.panelIds.length}
+                    ${i.feedback.some(f => f.biasFlags.length > 0) ? ' <span class="chip chip-danger">⚠</span>' : ''}
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- VIEW: INTERVIEW DETAIL ---------- */
+function renderInterviewDetail() {
+  const i = INTERVIEWS.find(x => x.id === state.currentInterviewId);
+  if (!i) return '<div class="p-8">Interview not found</div>';
+  const c = candidateById(i.candidateId); const j = jobById(i.jobId); const s = stageById(i.stageId);
+  const cfg = j.stageConfig[i.stageId];
+
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      <div class="flex items-center gap-2 text-sm text-[var(--text-2)] mb-3">
+        <a class="hover:text-[var(--text)] cursor-pointer" onclick="nav('interviews')">Interviews</a>
+        <span>/</span>
+        <span class="text-[var(--text)]">${esc(s.name)} · ${esc(c.name)}</span>
+      </div>
+
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">${esc(s.name)}</h1>
+          <div class="text-sm text-[var(--text-2)] mt-1">${esc(c.name)} for ${esc(j.title)}</div>
+          <div class="flex items-center gap-2 mt-2">
+            ${statusChip(i.status)}
+            <span class="chip">${ICON.clock} ${fmtDateTime(i.scheduledAt)}</span>
+            <span class="chip">${cfg.duration}m · ${cfg.format}</span>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn" onclick="openReschedule('${i.id}')">${ICON.refresh}Reschedule</button>
+          <a class="btn btn-primary" href="https://${i.meetLink}" target="_blank">${ICON.video}Join Meeting</a>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6">
+        <div class="col-span-2 space-y-6">
+          <!-- Recruiter notes -->
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Assessment Focus</div>
+            <div class="text-sm mb-3 italic text-[var(--text-2)]">${esc(cfg.focus)}</div>
+            ${i.notes ? `<div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2 mt-4">Recruiter Note to Panel</div><div class="text-sm bg-[var(--accent-50)] p-3 rounded border border-[var(--accent-100)]">${esc(i.notes)}</div>` : ''}
+          </div>
+
+          <!-- Feedback section -->
+          <div class="card">
+            <div class="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+              <div class="font-semibold">Feedback</div>
+              <div class="text-xs text-[var(--text-2)]">${i.feedback.length} of ${i.panelIds.length} submitted</div>
+            </div>
+            <div class="divide-y divide-[var(--border)]">
+              ${i.panelIds.map(pid => {
+                const p = panelById(pid);
+                const f = i.feedback.find(x => x.panelId === pid);
+                if (!f) {
+                  return `
+                    <div class="p-4 flex items-center justify-between">
+                      <div class="flex items-center gap-3">${avatar(pid)}<div><div class="font-medium text-sm">${esc(p.name)}</div><div class="text-xs text-[var(--text-2)]">Feedback pending</div></div></div>
+                      <button class="btn btn-sm" onclick="toast('Reminder sent to ${esc(p.name)}')">${ICON.bell}Remind</button>
+                    </div>
+                  `;
+                }
+                const avgScore = Object.values(f.scores).reduce((a,b)=>a+b,0)/Object.values(f.scores).length;
+                return `
+                  <div class="p-4">
+                    <div class="flex items-start justify-between mb-3">
+                      <div class="flex items-center gap-3">${avatar(pid)}<div><div class="font-medium text-sm">${esc(p.name)}</div><div class="text-xs text-[var(--text-2)]">Submitted ${relativeTime(f.submittedAt)}</div></div></div>
+                      <div class="flex items-center gap-2">
+                        ${recommendationChip(f.recommendation)}
+                        <span class="text-sm font-medium">${avgScore.toFixed(1)} / 5</span>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                      ${Object.entries(f.scores).map(([k,v]) => `
+                        <div class="flex items-center justify-between bg-[var(--surface)] px-3 py-1.5 rounded text-sm">
+                          <span class="text-[var(--text-2)]">${esc(k)}</span>
+                          <span class="font-medium">${v} / 5</span>
+                        </div>
+                      `).join("")}
+                    </div>
+                    <div class="text-sm bg-[var(--surface)] p-3 rounded border border-[var(--border)]">${renderBiasHighlighted(f.freeText, f.biasFlags)}</div>
+                    ${f.biasFlags.length > 0 ? `
+                      <div class="banner banner-warn mt-3">
+                        ${ICON.alert}
+                        <div>
+                          <div class="font-semibold mb-1">AI Bias Scan — ${f.biasFlags.length} pattern${f.biasFlags.length > 1 ? 's' : ''} detected</div>
+                          <div class="text-xs">Flagged language: <strong>${f.biasFlags.map(x => `"${esc(x)}"`).join(", ")}</strong>. This note is private to recruiter only — panelist is not notified.</div>
+                          <button class="btn btn-sm mt-2" onclick="openBiasReview('${i.id}','${f.panelId}')">Review details</button>
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          </div>
+
+          <!-- Consistency tracker -->
+          ${i.feedback.length > 1 ? renderConsistencyPanel(i) : ''}
+        </div>
+
+        <!-- Side -->
+        <div class="space-y-6">
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Candidate</div>
+            <div class="flex items-center gap-3 mb-3">${avatar(c.id,"avatar-lg")}<div><div class="font-medium">${esc(c.name)}</div><div class="text-xs text-[var(--text-2)]">${esc(c.email)}</div></div></div>
+            <div class="flex items-center gap-2 p-2 bg-[var(--surface-2)] rounded mb-2">${ICON.file}<span class="text-sm flex-1 truncate">${esc(c.resume)}</span></div>
+            <div class="text-xs text-[var(--text-2)] italic">Resume visible to panel only (not candidate)</div>
+            <button class="btn btn-sm mt-3 w-full" onclick="openCandidate('${c.id}')">View Full Profile</button>
+          </div>
+
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Meeting</div>
+            <div class="flex items-center gap-2 p-2 bg-[var(--surface-2)] rounded mb-2">${ICON.video}<span class="text-sm font-mono flex-1 truncate">${esc(i.meetLink)}</span></div>
+            <div class="space-y-1.5 text-sm">
+              <div class="flex justify-between"><span class="text-[var(--text-2)]">Duration</span><span>${cfg.duration}m</span></div>
+              <div class="flex justify-between"><span class="text-[var(--text-2)]">Format</span><span>${cfg.format}</span></div>
+              ${cfg.presentation ? '<div class="flex justify-between"><span class="text-[var(--text-2)]">Presentation</span><span class="text-[var(--warn)]">Required</span></div>' : ''}
+            </div>
+          </div>
+
+          <div class="card p-4">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Reminders</div>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-sm"><span class="dot" style="background:var(--success)"></span><span>48h reminder sent</span></div>
+              <div class="flex items-center gap-2 text-sm"><span class="dot" style="background:var(--text-3)"></span><span class="text-[var(--text-2)]">24h reminder — ${relativeTime(new Date(i.scheduledAt.getTime() - 24*3600000))}</span></div>
+              <div class="flex items-center gap-2 text-sm"><span class="dot" style="background:var(--text-3)"></span><span class="text-[var(--text-2)]">2h final nudge — ${relativeTime(new Date(i.scheduledAt.getTime() - 2*3600000))}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBiasHighlighted(text, flags) {
+  let out = esc(text);
+  flags.forEach(flag => {
+    const re = new RegExp(`\\b(${flag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, "gi");
+    out = out.replace(re, '<span class="highlight-bias" title="Flagged by AI bias scan">$1</span>');
+  });
+  return out;
+}
+
+function renderConsistencyPanel(interview) {
+  // Calculate score variance
+  const criteria = Object.keys(interview.feedback[0].scores);
+  const variance = {};
+  criteria.forEach(k => {
+    const vals = interview.feedback.map(f => f.scores[k]);
+    const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+    variance[k] = Math.max(...vals) - Math.min(...vals);
+  });
+  const maxGap = Math.max(...Object.values(variance));
+  const recs = interview.feedback.map(f => f.recommendation);
+  const hasStrongYes = recs.some(r => r === "strong_yes");
+  const hasNo = recs.some(r => r === "no" || r === "strong_no");
+  const disagreement = hasStrongYes && hasNo;
+
+  if (!disagreement && maxGap < 3) return '';
+
+  return `
+    <div class="banner banner-warn">
+      ${ICON.alert}
+      <div class="flex-1">
+        <div class="font-semibold mb-1">Consistency Check — Panel disagreement detected</div>
+        <div class="text-xs mb-2">Score spread up to <strong>${maxGap} points</strong>${disagreement ? ' · recommendations span Strong Yes to No' : ''}. Worth discussing in calibration.</div>
+        <div class="grid grid-cols-${criteria.length} gap-2 mt-3">
+          ${criteria.map(k => `
+            <div class="bg-white rounded p-2 text-center">
+              <div class="text-[10px] text-[var(--text-3)] uppercase">${esc(k)}</div>
+              <div class="text-lg font-semibold ${variance[k] >= 3 ? 'text-[var(--danger)]' : ''}">${variance[k]}pt</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- VIEW: BIAS LAB ---------- */
+function renderBiasLab() {
+  const tabs = [
+    { id: "flags", label: "Active Flags" },
+    { id: "blind", label: "Blind Review" },
+    { id: "calibration", label: "Calibration" },
+    { id: "consistency", label: "Consistency" },
+    { id: "diversity", label: "Diversity Signal" },
+    { id: "rubrics", label: "Rubrics" },
+  ];
+  return `
+    <div class="px-8 py-6 max-w-[1400px]">
+      ${topBar("Bias Lab", "Structured, transparent fairness controls across your hiring process")}
+
+      <div class="banner banner-info mb-6">
+        ${ICON.shield}
+        <div>
+          <div class="font-semibold mb-0.5">Why Bias Lab exists</div>
+          <div class="text-xs">Six lightweight interventions layered across your interview loop — blind review, structured rubrics, AI language scan, consistency tracker, anonymised calibration, diversity signal. Each one is opt-in and explainable.</div>
+        </div>
+      </div>
+
+      <div class="flex gap-1 mb-5 border-b border-[var(--border)]">
+        ${tabs.map(t => `<div class="tab ${state.biasTab === t.id ? 'active' : ''}" onclick="state.biasTab='${t.id}';renderApp()">${t.label}</div>`).join("")}
+      </div>
+
+      <div class="anim-fade">
+        ${state.biasTab === 'flags' ? renderBiasFlags() : ''}
+        ${state.biasTab === 'blind' ? renderBlindReview() : ''}
+        ${state.biasTab === 'calibration' ? renderCalibration() : ''}
+        ${state.biasTab === 'consistency' ? renderConsistencyTab() : ''}
+        ${state.biasTab === 'diversity' ? renderDiversity() : ''}
+        ${state.biasTab === 'rubrics' ? renderRubrics() : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderBiasFlags() {
+  const flagged = [];
+  INTERVIEWS.forEach(i => i.feedback.forEach(f => {
+    if (f.biasFlags.length > 0) flagged.push({ interview: i, feedback: f });
+  }));
+
+  if (flagged.length === 0) return `<div class="card p-8 text-center text-[var(--text-2)]">No bias flags detected across active interviews. Nice.</div>`;
+
+  return `
+    <div class="space-y-3">
+      ${flagged.map(({ interview, feedback }) => {
+        const c = candidateById(interview.candidateId);
+        const p = panelById(feedback.panelId);
+        const s = stageById(interview.stageId);
+        return `
+          <div class="card">
+            <div class="p-4 border-b border-[var(--border)] flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                ${avatar(p.id)}
+                <div>
+                  <div class="font-medium">${esc(p.name)}'s feedback on ${esc(c.name)}</div>
+                  <div class="text-xs text-[var(--text-2)]">${esc(s.name)} · ${fmtDate(feedback.submittedAt)}</div>
+                </div>
+              </div>
+              <span class="chip chip-danger">${feedback.biasFlags.length} pattern${feedback.biasFlags.length > 1 ? 's' : ''}</span>
+            </div>
+            <div class="p-4">
+              <div class="text-sm bg-[var(--surface)] p-3 rounded border border-[var(--border)] mb-3">${renderBiasHighlighted(feedback.freeText, feedback.biasFlags)}</div>
+              <div class="space-y-2">
+                ${feedback.biasFlags.map(flag => {
+                  const category = Object.entries(BIAS_LEXICON).find(([, v]) => v.pattern.test(flag));
+                  const catKey = category ? category[0] : "other";
+                  const catData = category ? category[1] : { severity: "low", note: "Language pattern flagged." };
+                  return `
+                    <div class="flex items-start gap-2 p-2 bg-[var(--surface)] rounded">
+                      <span class="chip ${catData.severity === 'high' ? 'chip-danger' : catData.severity === 'medium' ? 'chip-warn' : ''} flex-shrink-0">${esc(catKey)}</span>
+                      <div class="flex-1">
+                        <div class="text-sm">"<strong>${esc(flag)}</strong>" — ${esc(catData.note)}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+              <div class="flex gap-2 mt-4">
+                <button class="btn btn-sm" onclick="toast('Coaching note drafted — sent to panelist privately')">${ICON.mail}Send coaching note</button>
+                <button class="btn btn-sm" onclick="toast('Dismissed — logged for calibration training')">Dismiss</button>
+                <button class="btn btn-sm" onclick="openInterview('${interview.id}')">View in context</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderBlindReview() {
+  const byStage = {};
+  INTERVIEWS.filter(i => i.status === "scheduled").forEach(i => {
+    if (!byStage[i.stageId]) byStage[i.stageId] = [];
+    byStage[i.stageId].push(i);
+  });
+
+  return `
+    <div class="card p-5 mb-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="font-semibold">Blind Review Mode</div>
+          <div class="text-sm text-[var(--text-2)] mt-1">Before interviews, panelists see rubric + assessment criteria only. Name, photo, school, and demographic signals are masked until feedback is submitted.</div>
+        </div>
+        <label class="flex items-center gap-2"><input type="checkbox" checked/> Active for all scheduled stages</label>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="card p-4">
+        <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-3">What the panelist sees (blinded)</div>
+        <div class="flex items-center gap-3 mb-3 pb-3 border-b border-[var(--border)]">
+          <div class="avatar avatar-lg" style="background:var(--surface-2);color:var(--text-3)">?</div>
+          <div>
+            <div class="blind"></div>
+            <div class="text-xs text-[var(--text-3)] mt-1">Candidate ID #A7F2</div>
+          </div>
+        </div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center gap-2">${ICON.briefcase}<span>Staff Software Engineer, Platform</span></div>
+          <div class="flex items-center gap-2">${ICON.clock}<span>60 min · System Design</span></div>
+          <div class="flex items-center gap-2">${ICON.shield}<span>Assess at L5 against leadership principles</span></div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-[var(--border)]">
+          <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Experience (masked)</div>
+          <ul class="text-sm space-y-1 text-[var(--text-2)]">
+            <li>• 10 years at <span class="blind"></span></li>
+            <li>• Led <span class="blind"></span> team of 12</li>
+            <li>• <span class="blind"></span> graduate</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-3">After feedback submission — unblinded</div>
+        <div class="flex items-center gap-3 mb-3 pb-3 border-b border-[var(--border)]">
+          ${avatar("c1","avatar-lg")}
+          <div>
+            <div class="font-medium">Aisha Patel</div>
+            <div class="text-xs text-[var(--text-2)]">linkedin.com/in/aishapatel</div>
+          </div>
+        </div>
+        <div class="space-y-2 text-sm text-[var(--text-2)]">
+          <div>• 10 years — Netflix, Uber, Microsoft</div>
+          <div>• Led platform team at Netflix</div>
+          <div>• MS Computer Science, Stanford</div>
+        </div>
+        <div class="banner banner-success mt-3">${ICON.check}<div class="text-xs">Full profile revealed. Panelist's feedback is locked and cannot be edited after this point.</div></div>
+      </div>
+    </div>
+
+    <div class="card p-5 mt-4">
+      <div class="font-semibold mb-2">What's masked by default</div>
+      <div class="grid grid-cols-3 gap-2 text-sm">
+        ${["Candidate name","Photo","LinkedIn profile","School / university","Prior companies (optional)","Nationality / location","Self-declared demographics","Name of recruiter source"].map(x => `<div class="flex items-center gap-2 p-2 bg-[var(--surface)] rounded">${ICON.eyeoff}<span>${x}</span></div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderCalibration() {
+  // Candidates who have feedback for the same stage
+  const candsWithFb = CANDIDATES.filter(c => {
+    const ivs = interviewsByCandidate(c.id).filter(i => i.feedback.length > 0);
+    return ivs.length > 0;
+  });
+
+  // For demo, show all feedback at a single stage (r2) side by side — anonymised
+  const stage = "r2";
+  const ivs = INTERVIEWS.filter(i => i.stageId === stage && i.feedback.length > 0);
+
+  return `
+    <div class="card p-5 mb-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="font-semibold">Anonymised Calibration View</div>
+          <div class="text-sm text-[var(--text-2)] mt-1">Compare all candidates at the same stage with names hidden. Forces competency-driven decisions.</div>
+        </div>
+        <button class="btn" onclick="state.calibrationBlind = !state.calibrationBlind; renderApp()">${state.calibrationBlind ? ICON.eyeoff : ICON.eye}${state.calibrationBlind ? 'Names hidden' : 'Names visible'}</button>
+      </div>
+    </div>
+
+    <div class="card overflow-hidden">
+      <div class="p-3 border-b border-[var(--border)] bg-[var(--surface)] text-sm font-medium">Stage: Onsite — Round 2 · ${ivs.length} candidates</div>
+      <table class="data">
+        <thead><tr><th>Candidate</th><th>Avg Score</th><th>System Design</th><th>Problem Solving</th><th>Communication</th><th>Leadership</th><th>Recommendation</th></tr></thead>
+        <tbody>
+          ${ivs.map((iv, idx) => {
+            const c = candidateById(iv.candidateId);
+            // Aggregate scores
+            const agg = {}; const criteria = Object.keys(iv.feedback[0].scores);
+            criteria.forEach(k => agg[k] = iv.feedback.reduce((s,f) => s + f.scores[k], 0) / iv.feedback.length);
+            const avg = Object.values(agg).reduce((a,b)=>a+b,0) / Object.keys(agg).length;
+            const topRec = iv.feedback.map(f => f.recommendation).sort().join(" / ");
+            return `
+              <tr>
+                <td>
+                  ${state.calibrationBlind
+                    ? `<div class="flex items-center gap-2"><div class="avatar avatar-sm" style="background:var(--surface-2);color:var(--text-3)">${String.fromCharCode(65+idx)}</div><span class="font-mono text-sm">Candidate ${String.fromCharCode(65+idx)}</span></div>`
+                    : `<div class="flex items-center gap-2">${avatar(c.id,"avatar-sm")}<span class="font-medium">${esc(c.name)}</span></div>`}
+                </td>
+                <td class="font-medium">${avg.toFixed(2)}</td>
+                ${criteria.map(k => `<td>${agg[k].toFixed(1)} / 5</td>`).join("")}
+                <td>${iv.feedback.map(f => recommendationChip(f.recommendation)).join(" ")}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="banner banner-info mt-4">
+      ${ICON.sparkles}
+      <div>
+        <div class="font-semibold mb-1">How this helps</div>
+        <div class="text-xs">When making cut decisions, comparing anonymised scorecards side-by-side removes "I liked them" bias and surfaces candidates who score well but may have weaker networks or more modest self-presentation.</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderConsistencyTab() {
+  const multiPanel = INTERVIEWS.filter(i => i.feedback.length >= 2);
+  const items = multiPanel.map(iv => {
+    const criteria = Object.keys(iv.feedback[0].scores);
+    const variance = {};
+    criteria.forEach(k => {
+      const vals = iv.feedback.map(f => f.scores[k]);
+      variance[k] = Math.max(...vals) - Math.min(...vals);
+    });
+    const maxGap = Math.max(...Object.values(variance));
+    const recs = [...new Set(iv.feedback.map(f => f.recommendation))];
+    const disagreement = recs.includes("strong_yes") && (recs.includes("no") || recs.includes("strong_no"));
+    return { iv, maxGap, disagreement };
+  }).sort((a,b) => b.maxGap - a.maxGap);
+
+  return `
+    <div class="card p-5 mb-4">
+      <div class="font-semibold">Consistency Tracker</div>
+      <div class="text-sm text-[var(--text-2)] mt-1">Flags interviews where panelists rate the same candidate very differently on the same rubric criteria.</div>
+    </div>
+    <div class="space-y-3">
+      ${items.length === 0 ? '<div class="card p-6 text-center text-[var(--text-3)]">No multi-panel stages to compare yet.</div>' : ''}
+      ${items.map(({ iv, maxGap, disagreement }) => {
+        const c = candidateById(iv.candidateId); const s = stageById(iv.stageId);
+        const sev = disagreement ? "danger" : maxGap >= 3 ? "warn" : "";
+        return `
+          <div class="card p-4">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <div class="font-medium">${esc(c.name)} · ${esc(s.name)}</div>
+                <div class="text-xs text-[var(--text-2)] mt-0.5">${fmtDate(iv.scheduledAt)} · ${iv.feedback.length} panelists</div>
+              </div>
+              ${disagreement ? '<span class="chip chip-danger">Strong disagreement</span>' : maxGap >= 3 ? `<span class="chip chip-warn">${maxGap}pt spread</span>` : '<span class="chip chip-success">Aligned</span>'}
+            </div>
+            <div class="grid grid-cols-${iv.feedback.length} gap-2">
+              ${iv.feedback.map(f => {
+                const p = panelById(f.panelId);
+                const avg = Object.values(f.scores).reduce((a,b)=>a+b,0)/Object.values(f.scores).length;
+                return `
+                  <div class="p-3 bg-[var(--surface)] rounded">
+                    <div class="flex items-center gap-2 mb-2">${avatar(p.id,"avatar-sm")}<span class="text-xs font-medium truncate">${esc(p.name)}</span></div>
+                    <div class="text-lg font-semibold">${avg.toFixed(1)} / 5</div>
+                    <div>${recommendationChip(f.recommendation)}</div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+            ${disagreement ? `<div class="mt-3 text-xs text-[var(--text-2)] italic">Schedule a 15min calibration to resolve before advancing.</div>` : ''}
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderDiversity() {
+  // Aggregate pass rates across stages by gender / ethnicity (purely illustrative)
+  const byStage = {};
+  const totalCount = CANDIDATES.length;
+  const categories = ["gender","ethnicity"];
+
+  const computeRates = (field) => {
+    const groups = {};
+    CANDIDATES.forEach(c => { const g = c[field] || "—"; if (!groups[g]) groups[g] = { total: 0, past_screen: 0, past_r2: 0, offers: 0 }; });
+    CANDIDATES.forEach(c => {
+      const g = c[field] || "—";
+      groups[g].total++;
+      const order = ["applied","screening","r1","r2","r3","presentation","hm","offer"];
+      const idx = order.indexOf(c.stage === "rejected" ? "applied" : (c.stage === "offer" ? "offer" : c.stage));
+      if (idx >= order.indexOf("r1")) groups[g].past_screen++;
+      if (idx >= order.indexOf("r2")) groups[g].past_r2++;
+      if (c.stage === "offer") groups[g].offers++;
+    });
+    return groups;
+  };
+
+  const genderRates = computeRates("gender");
+  const ethRates = computeRates("ethnicity");
+
+  const tableFor = (title, rates) => `
+    <div class="card">
+      <div class="px-4 py-3 border-b border-[var(--border)] font-semibold">${title}</div>
+      <table class="data">
+        <thead><tr><th>Group</th><th>Total</th><th>Past Screening</th><th>Past Round 2</th><th>Offers</th></tr></thead>
+        <tbody>
+          ${Object.entries(rates).map(([k, v]) => `
+            <tr>
+              <td><span class="chip">${esc(k)}</span></td>
+              <td>${v.total}</td>
+              <td>${v.past_screen} <span class="text-[var(--text-3)] text-xs">(${v.total ? Math.round(v.past_screen/v.total*100) : 0}%)</span></td>
+              <td>${v.past_r2} <span class="text-[var(--text-3)] text-xs">(${v.total ? Math.round(v.past_r2/v.total*100) : 0}%)</span></td>
+              <td>${v.offers}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  return `
+    <div class="banner banner-info mb-4">
+      ${ICON.shield}
+      <div>
+        <div class="font-semibold mb-0.5">Diversity Signal (opt-in)</div>
+        <div class="text-xs">Aggregate pass/fail rates by self-declared demographics, shown only after the process completes. Numbers below are from demo data. Real deployments should use differential privacy thresholds (min N=10 per cohort).</div>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      ${tableFor("Pipeline throughput — by gender", genderRates)}
+      ${tableFor("Pipeline throughput — by ethnicity", ethRates)}
+    </div>
+  `;
+}
+
+function renderRubrics() {
+  const rubric = {
+    "System Design": ["0 — Cannot describe how to build the system","1 — Describes a plausible architecture, lots of handholding","2 — Sketches a working design, some tradeoffs","3 — Solid design with explicit tradeoffs and awareness of bottlenecks","4 — Excellent — anticipates scaling, operability, failure modes","5 — Shapes the design space; surfaces non-obvious tradeoffs"],
+    "Problem Solving": ["0 — Stuck","1 — Solves with heavy hints","2 — Solves with some hints","3 — Solves cleanly","4 — Solves cleanly + explores alternatives","5 — Novel approach or elegant generalisation"],
+    "Communication": ["0 — Unclear throughout","1 — Gets ideas across with effort","2 — Clear most of the time","3 — Clear, structured, checks understanding","4 — Exceptionally clear; adjusts to audience","5 — Teaches panelist something"],
+    "Leadership (L5+)": ["0 — No leadership signal","1 — Individual contribution only","2 — Mentored peers","3 — Led a small team or initiative","4 — Led cross-functional work with measurable impact","5 — Shaped organisational strategy"],
+  };
+
+  return `
+    <div class="card p-5 mb-4">
+      <div class="font-semibold">Structured Scoring Rubrics</div>
+      <div class="text-sm text-[var(--text-2)] mt-1">Every stage uses a pre-defined rubric. Free-text feedback is gated — it's only enabled after structured scores are filled. This forces evaluators to anchor opinions to criteria before writing a narrative.</div>
+    </div>
+    <div class="space-y-4">
+      ${Object.entries(rubric).map(([k, levels]) => `
+        <div class="card">
+          <div class="px-4 py-3 border-b border-[var(--border)] font-semibold">${esc(k)}</div>
+          <div class="divide-y divide-[var(--border)]">
+            ${levels.map(l => `<div class="px-4 py-2.5 text-sm">${esc(l)}</div>`).join("")}
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+/* ---------- VIEW: SETTINGS ---------- */
+function renderSettings() {
+  return `
+    <div class="px-8 py-6 max-w-[1000px]">
+      ${topBar("Settings", "Pipeline configuration and integrations")}
+
+      <div class="card mb-6">
+        <div class="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between">
+          <div>
+            <div class="font-semibold">Interview Stages</div>
+            <div class="text-xs text-[var(--text-2)]">Drag to reorder. Applied globally across all jobs.</div>
+          </div>
+          <button class="btn btn-sm">${ICON.plus}Add Stage</button>
+        </div>
+        <div class="divide-y divide-[var(--border)]">
+          ${STAGES.map((s,i) => `
+            <div class="p-4 flex items-center gap-4">
+              <div class="text-sm font-mono text-[var(--text-3)] w-6">${i+1}</div>
+              <div class="flex-1">
+                <div class="font-medium">${esc(s.name)}</div>
+                <div class="text-xs text-[var(--text-2)]">Default: ${s.duration}m · ${s.format}</div>
+              </div>
+              <button class="btn btn-sm btn-ghost">Edit</button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="px-4 py-3 border-b border-[var(--border)] font-semibold">Integrations</div>
+        <div class="divide-y divide-[var(--border)]">
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded bg-[var(--surface-2)] flex items-center justify-center">📅</div><div><div class="font-medium">Google Calendar</div><div class="text-xs text-[var(--text-2)]">OAuth connected · 6 panelists synced</div></div></div>
+            <span class="chip chip-success">Connected</span>
+          </div>
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded bg-[var(--surface-2)] flex items-center justify-center">📧</div><div><div class="font-medium">Microsoft Outlook</div><div class="text-xs text-[var(--text-2)]">Microsoft Graph · 2 panelists synced</div></div></div>
+            <span class="chip chip-success">Connected</span>
+          </div>
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded bg-[var(--surface-2)] flex items-center justify-center">📨</div><div><div class="font-medium">SendGrid</div><div class="text-xs text-[var(--text-2)]">Transactional email</div></div></div>
+            <span class="chip chip-success">Connected</span>
+          </div>
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded bg-[var(--surface-2)] flex items-center justify-center">🎤</div><div><div class="font-medium">Otter.ai / Whisper</div><div class="text-xs text-[var(--text-2)]">Interview transcription</div></div></div>
+            <button class="btn btn-sm">Connect</button>
+          </div>
+          <div class="p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded bg-[var(--surface-2)] flex items-center justify-center">✨</div><div><div class="font-medium">Claude API</div><div class="text-xs text-[var(--text-2)]">Bias detection + feedback summarisation</div></div></div>
+            <span class="chip chip-success">Connected</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="px-4 py-3 border-b border-[var(--border)] font-semibold">Bias Lab</div>
+        <div class="p-4 space-y-3">
+          <label class="flex items-center justify-between"><span class="text-sm">Blind review mode (default for new jobs)</span><input type="checkbox" checked></label>
+          <label class="flex items-center justify-between"><span class="text-sm">AI bias scan on all written feedback</span><input type="checkbox" checked></label>
+          <label class="flex items-center justify-between"><span class="text-sm">Notify panelist of their own flagged language</span><input type="checkbox"></label>
+          <label class="flex items-center justify-between"><span class="text-sm">Require structured scoring before free-text</span><input type="checkbox" checked></label>
+          <label class="flex items-center justify-between"><span class="text-sm">Surface diversity signal at offer stage</span><input type="checkbox" checked></label>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   PANEL ROLE VIEW
+   ========================================================================== */
+function renderPanelShell() {
+  // Pretend the logged-in panelist is Priya Sharma
+  const me = PANELS[0];
+  const myInterviews = interviewsForPanel(me.id).sort((a,b) => a.scheduledAt - b.scheduledAt);
+  const pendingFeedback = myInterviews.filter(i => i.status === "completed" && !i.feedback.find(f => f.panelId === me.id));
+
+  return `
+    <div class="min-h-screen bg-[var(--surface)]">
+      <header class="bg-white border-b border-[var(--border)]">
+        <div class="max-w-[1000px] mx-auto px-6 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-md bg-[var(--accent)] text-white flex items-center justify-center text-sm font-bold">I</div>
+            <div class="font-semibold">Interviewly <span class="text-[var(--text-3)] font-normal">· Panel Portal</span></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 text-sm">${avatar(me.id,"avatar-sm")}<span>${esc(me.name)}</span></div>
+            ${roleSwitcher()}
+          </div>
+        </div>
+      </header>
+
+      <main class="max-w-[1000px] mx-auto px-6 py-8">
+        <h1 class="text-2xl font-semibold tracking-tight mb-1">Your Interviews</h1>
+        <p class="text-sm text-[var(--text-2)] mb-6">Only your assigned interviews are shown. Candidate resumes and JDs are available once you open each one.</p>
+
+        ${pendingFeedback.length > 0 ? `
+          <div class="banner banner-warn mb-5">${ICON.alert}<div><div class="font-semibold">${pendingFeedback.length} feedback submission${pendingFeedback.length > 1 ? 's' : ''} pending</div><div class="text-xs mt-0.5">Please submit structured feedback within 24h of the interview.</div></div></div>
+        ` : ''}
+
+        <div class="card">
+          <div class="divide-y divide-[var(--border)]">
+            ${myInterviews.map(i => {
+              const c = candidateById(i.candidateId); const j = jobById(i.jobId); const s = stageById(i.stageId);
+              const myFb = i.feedback.find(f => f.panelId === me.id);
+              const blind = i.status === "scheduled";
+              return `
+                <div class="p-4 hover:bg-[var(--surface)] cursor-pointer" onclick="openPanelInterview('${i.id}')">
+                  <div class="flex items-start justify-between">
+                    <div class="flex items-start gap-3">
+                      ${blind ? '<div class="avatar avatar-lg" style="background:var(--surface-2);color:var(--text-3)">?</div>' : avatar(c.id, "avatar-lg")}
+                      <div>
+                        <div class="font-medium">${blind ? `Candidate #${c.id.toUpperCase()}` : esc(c.name)} ${blind ? '<span class="chip ml-2">🔒 Blinded</span>' : ''}</div>
+                        <div class="text-sm text-[var(--text-2)] mt-0.5">${esc(j.title)} · ${esc(s.name)}</div>
+                        <div class="text-xs text-[var(--text-3)] mt-1">${fmtDateTime(i.scheduledAt)}</div>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      ${statusChip(i.status)}
+                      ${myFb ? `<div class="mt-2">${recommendationChip(myFb.recommendation)}</div>` : i.status === "completed" ? '<div class="mt-2"><span class="chip chip-warn">Feedback pending</span></div>' : ''}
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+
+        <div class="mt-6 text-xs text-[var(--text-3)]">
+          ${ICON.shield} Blind review is active: candidate identity is masked until you submit feedback.
+        </div>
+      </main>
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   CANDIDATE ROLE VIEW (scheduling page)
+   ========================================================================== */
+function renderCandidateShell() {
+  // Pretend logged-in candidate is Kenji (c3), has a pending screening
+  const me = candidateById("c3");
+  const iv = INTERVIEWS.find(i => i.candidateId === me.id && i.status === "scheduled");
+  const j = jobById(me.jobId);
+  const s = iv ? stageById(iv.stageId) : null;
+
+  // Generate candidate-facing slots
+  const cfg = j.stageConfig[iv.stageId];
+  const slots = findOverlappingSlots(cfg.panel, cfg.duration).slice(0, 5);
+
+  return `
+    <div class="min-h-screen bg-[var(--surface)] py-8 px-4">
+      <div class="max-w-2xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-md bg-[var(--accent)] text-white flex items-center justify-center text-sm font-bold">I</div>
+            <div class="font-semibold">Interviewly</div>
+          </div>
+          ${roleSwitcher()}
+        </div>
+
+        <div class="card p-6">
+          <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">${esc(j.title)}</div>
+          <h1 class="text-2xl font-semibold tracking-tight mb-1">Schedule your ${esc(s.name)}</h1>
+          <p class="text-sm text-[var(--text-2)] mb-6">Hi ${esc(me.name.split(' ')[0])} — please pick a slot below. The interview will take ${cfg.duration} minutes over ${cfg.format}.</p>
+
+          <div class="card p-4 mb-5" style="background:var(--surface)">
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Role overview</div>
+            <div class="text-sm">We're hiring a ${esc(j.level)} ${esc(j.title)} based in ${esc(j.location)}. You'll be working on systems at significant scale alongside a small, senior team. This ${esc(s.name)} focuses on high-level scope and motivation.</div>
+          </div>
+
+          <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Available slots · next 10 business days</div>
+          <div class="space-y-2 mb-6">
+            ${slots.slice(0,5).map((slot, idx) => `
+              <div class="slot-card ${idx === 0 ? 'selected' : ''}" onclick="document.querySelectorAll('.slot-card').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-medium">${fmtDate(slot.start, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+                    <div class="text-sm text-[var(--text-2)]">${fmtTime(slot.start)} – ${fmtTime(slot.end)} · your time zone</div>
+                  </div>
+                  ${idx === 0 ? '<span class="chip chip-accent">Recommended</span>' : ''}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+
+          <button class="btn btn-primary w-full justify-center" onclick="toast('Slot confirmed. Calendar invite sent to kenji.h@email.com with meeting link.')">Confirm Slot</button>
+
+          <div class="mt-4 text-center text-xs text-[var(--text-3)]">
+            Can't make any of these? <a class="text-[var(--accent)] cursor-pointer" onclick="toast('Reschedule request sent to recruiter.')">Request new times</a>
+          </div>
+        </div>
+
+        <div class="mt-4 text-xs text-[var(--text-3)] text-center">
+          This link is unique to you. Do not share.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+function renderModal() {
+  const root = document.getElementById("modal-root");
+  if (!state.modal) { root.innerHTML = ""; return; }
+
+  let content = "";
+  switch (state.modal.type) {
+    case "scheduler": content = renderSchedulerModal(); break;
+    case "panel-interview": content = renderPanelInterviewModal(); break;
+    case "bulk-import": content = renderBulkImportModal(); break;
+    case "reschedule": content = renderRescheduleModal(); break;
+    case "bias-review": content = renderBiasReviewModal(); break;
+    case "feedback-form": content = renderFeedbackForm(); break;
+  }
+  root.innerHTML = `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="modal ${state.modal.size || ''}">${content}</div></div>`;
+}
+
+function renderSchedulerModal() {
+  const { candidateId, stageId, step, panelSlots } = state.schedulingState;
+  const c = candidateById(candidateId);
+  const j = jobById(c.jobId);
+  const s = stageById(stageId);
+  const cfg = j.stageConfig[stageId];
+
+  if (step === 1) {
+    return `
+      <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+        <div>
+          <div class="font-semibold text-lg">Schedule ${esc(s.name)}</div>
+          <div class="text-sm text-[var(--text-2)]">${esc(c.name)} · ${esc(j.title)}</div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeModal()">${ICON.x}</button>
+      </div>
+      <div class="p-5">
+        <div class="grid grid-cols-2 gap-4 mb-5">
+          <div>
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Duration</div>
+            <select class="select"><option>${cfg.duration} minutes</option></select>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Format</div>
+            <select class="select"><option>${cfg.format}</option></select>
+          </div>
+        </div>
+        <div class="mb-5">
+          <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Panel</div>
+          <div class="flex flex-wrap gap-2">
+            ${cfg.panel.map(pid => `<div class="chip chip-accent">${avatar(pid,"avatar-sm")} <span class="ml-1">${esc(panelById(pid).name)}</span></div>`).join("")}
+            <button class="btn btn-sm">${ICON.plus}Add</button>
+          </div>
+        </div>
+        <div class="mb-5">
+          <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Recruiter note to panel (optional)</div>
+          <textarea class="textarea" placeholder="Context for the panel — what to probe, what the candidate's background suggests focus on…"></textarea>
+        </div>
+        <div class="flex justify-between items-center">
+          <div class="text-sm text-[var(--text-2)]">Next: we'll scan the panel's calendars and surface overlapping slots.</div>
+          <button class="btn btn-primary" onclick="schedulerNext()">Find Slots ${ICON.arrow}</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step === 2) {
+    const slots = panelSlots || [];
+    const top = slots.slice(0, 5);
+    return `
+      <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+        <div>
+          <div class="font-semibold text-lg">Pick slots to offer panel</div>
+          <div class="text-sm text-[var(--text-2)]">Top ${top.length} overlaps across ${cfg.panel.length} panelist${cfg.panel.length > 1 ? 's' : ''}. Next 10 business days.</div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeModal()">${ICON.x}</button>
+      </div>
+      <div class="p-5">
+        <div class="banner banner-info mb-4">${ICON.calendar}<div class="text-xs">Calendar intelligence ran across ${cfg.panel.length} calendars and found ${slots.length} overlapping free slots. Top ${top.length} shown.</div></div>
+        <div class="space-y-2 mb-5">
+          ${top.map((slot, idx) => `
+            <label class="slot-card flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" ${idx < 3 ? 'checked' : ''}/>
+              <div class="flex-1">
+                <div class="font-medium">${fmtDate(slot.start, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+                <div class="text-sm text-[var(--text-2)]">${fmtTime(slot.start)} – ${fmtTime(slot.end)}</div>
+              </div>
+              <div class="flex -space-x-1.5">${cfg.panel.map(pid => avatar(pid,"avatar-sm")).join("")}</div>
+            </label>
+          `).join("")}
+        </div>
+        <div class="flex justify-between items-center">
+          <button class="btn" onclick="state.schedulingState.step=1;renderApp()">← Back</button>
+          <button class="btn btn-primary" onclick="schedulerSend()">${ICON.mail}Send to Panel</button>
+        </div>
+      </div>
+    `;
+  }
+
+  if (step === 3) {
+    return `
+      <div class="p-8 text-center">
+        <div class="w-16 h-16 rounded-full bg-[var(--accent-50)] text-[var(--accent)] flex items-center justify-center mx-auto mb-4" style="width:64px;height:64px">${ICON.check}</div>
+        <div class="font-semibold text-lg mb-2">Slot-selection emails sent</div>
+        <div class="text-sm text-[var(--text-2)] mb-5 max-w-md mx-auto">Each panelist has received a magic-link email to confirm availability. Once all confirm, the candidate will be automatically offered the finalized slot.</div>
+        <div class="card p-4 text-left max-w-md mx-auto">
+          <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Next steps</div>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2">${ICON.clock}<span>Panel confirms within 24h</span></div>
+            <div class="flex items-center gap-2">${ICON.mail}<span>Candidate receives scheduling link</span></div>
+            <div class="flex items-center gap-2">${ICON.video}<span>Google Meet link auto-generated</span></div>
+            <div class="flex items-center gap-2">${ICON.bell}<span>Reminder cadence: 48h / 24h / 2h</span></div>
+          </div>
+        </div>
+        <button class="btn btn-primary mt-5" onclick="closeModal()">Done</button>
+      </div>
+    `;
+  }
+}
+
+function renderPanelInterviewModal() {
+  const { interviewId, step } = state.modal.data;
+  const i = INTERVIEWS.find(x => x.id === interviewId);
+  const c = candidateById(i.candidateId);
+  const j = jobById(i.jobId);
+  const s = stageById(i.stageId);
+  const cfg = j.stageConfig[i.stageId];
+  const me = PANELS[0]; // pretend Priya
+  const myFb = i.feedback.find(f => f.panelId === me.id);
+  const blind = !myFb && i.status === "scheduled";
+
+  return `
+    <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+      <div>
+        <div class="font-semibold text-lg">${esc(s.name)}</div>
+        <div class="text-sm text-[var(--text-2)]">${esc(j.title)} · ${fmtDateTime(i.scheduledAt)}</div>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal()">${ICON.x}</button>
+    </div>
+    <div class="p-5">
+      ${blind ? `
+        <div class="banner banner-info mb-4">${ICON.shield}<div><div class="font-semibold mb-0.5">Blind review active</div><div class="text-xs">Candidate name and demographic signals are hidden until you submit feedback. Focus on the rubric.</div></div></div>
+      ` : ''}
+
+      <div class="flex items-start gap-4 mb-5 pb-5 border-b border-[var(--border)]">
+        ${blind ? '<div class="avatar avatar-lg" style="background:var(--surface-2);color:var(--text-3)">?</div>' : avatar(c.id,"avatar-lg")}
+        <div class="flex-1">
+          <div class="font-medium">${blind ? `Candidate #${c.id.toUpperCase()}` : esc(c.name)}</div>
+          <div class="text-sm text-[var(--text-2)]">${esc(j.title)}</div>
+        </div>
+        <a href="https://${i.meetLink}" target="_blank" class="btn btn-primary">${ICON.video}Join Meeting</a>
+      </div>
+
+      <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Assessment focus</div>
+      <div class="text-sm mb-4">${esc(cfg.focus)}</div>
+
+      ${i.notes ? `<div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Recruiter note</div><div class="text-sm bg-[var(--surface)] p-3 rounded border border-[var(--border)] mb-4">${esc(i.notes)}</div>` : ''}
+
+      <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Resume</div>
+      <div class="flex items-center gap-2 p-2 bg-[var(--surface-2)] rounded mb-4">${ICON.file}<span class="text-sm flex-1 truncate">${blind ? 'candidate-resume.pdf' : esc(c.resume)}</span><button class="btn btn-sm btn-ghost">Open</button></div>
+
+      ${!myFb && i.status !== "scheduled" ? `
+        <button class="btn btn-primary w-full justify-center" onclick="openFeedbackForm('${i.id}')">Submit Feedback ${ICON.arrow}</button>
+      ` : myFb ? `
+        <div class="banner banner-success">${ICON.check}<div>Feedback submitted — ${relativeTime(myFb.submittedAt)}</div></div>
+      ` : `
+        <div class="text-sm text-[var(--text-2)] text-center p-3">Feedback form will unlock after the interview.</div>
+      `}
+    </div>
+  `;
+}
+
+function renderFeedbackForm() {
+  const { interviewId, scores, freeText, recommendation } = state.modal.data;
+  const i = INTERVIEWS.find(x => x.id === interviewId);
+  const c = candidateById(i.candidateId);
+  const s = stageById(i.stageId);
+  const criteria = ["System Design", "Problem Solving", "Communication", "Leadership"];
+  const scoresFilled = criteria.every(k => scores[k] != null);
+
+  return `
+    <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+      <div>
+        <div class="font-semibold text-lg">Feedback — ${esc(s.name)}</div>
+        <div class="text-sm text-[var(--text-2)]">For Candidate #${c.id.toUpperCase()} · Blinded review</div>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal()">${ICON.x}</button>
+    </div>
+    <div class="p-5">
+      <div class="banner banner-info mb-5">${ICON.shield}<div class="text-xs">Structured scoring is required before the free-text box unlocks. This forces anchoring to rubric criteria.</div></div>
+
+      ${criteria.map(k => `
+        <div class="mb-4">
+          <div class="text-sm font-medium mb-2">${esc(k)}</div>
+          <div class="grid grid-cols-6 gap-1.5">
+            ${[0,1,2,3,4,5].map(n => `
+              <div class="rubric-cell ${scores[k]===n?'selected':''}" onclick="setScore('${k}',${n})">${n}</div>
+            `).join("")}
+          </div>
+        </div>
+      `).join("")}
+
+      <div class="mb-4">
+        <div class="text-sm font-medium mb-2">Recommendation</div>
+        <div class="grid grid-cols-4 gap-1.5">
+          ${[["strong_yes","Strong Yes"],["yes","Yes"],["no","No"],["strong_no","Strong No"]].map(([v,l]) => `
+            <div class="rubric-cell ${recommendation===v?'selected':''}" onclick="setRec('${v}')">${l}</div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="mb-4 ${!scoresFilled ? 'opacity-50' : ''}">
+        <div class="text-sm font-medium mb-2">Written feedback ${!scoresFilled ? '<span class="text-xs text-[var(--text-3)]">(unlocks after scoring)</span>' : ''}</div>
+        <textarea class="textarea" ${!scoresFilled ? 'disabled' : ''} placeholder="Concrete examples from the interview. Focus on what they did — not your impressions of who they are." id="fb-free" oninput="state.modal.data.freeText=this.value">${esc(freeText||'')}</textarea>
+        <div class="text-xs text-[var(--text-3)] mt-1">An AI bias scan will run automatically on submission. Flags are private to the recruiter.</div>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" ${!scoresFilled || !recommendation ? 'disabled' : ''} onclick="submitFeedback()">Submit Feedback</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderBulkImportModal() {
+  return `
+    <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+      <div class="font-semibold text-lg">Bulk Import Candidates</div>
+      <button class="btn btn-ghost" onclick="closeModal()">${ICON.x}</button>
+    </div>
+    <div class="p-5">
+      <div class="card p-6 text-center border-dashed mb-4" style="border-style:dashed">
+        ${ICON.upload}
+        <div class="font-medium mt-2">Drop CSV here or click to upload</div>
+        <div class="text-xs text-[var(--text-3)] mt-1">Expected columns: name, email, linkedin, resume_url</div>
+      </div>
+      <div class="mb-4">
+        <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Sample preview</div>
+        <table class="data card overflow-hidden">
+          <thead><tr><th>Name</th><th>Email</th><th>LinkedIn</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Sarah Chen</td><td>sarah@email.com</td><td>linkedin.com/in/sarahchen</td><td><span class="chip chip-success">Ready</span></td></tr>
+            <tr><td>James Williams</td><td>james@email.com</td><td>linkedin.com/in/jameswilliams</td><td><span class="chip chip-success">Ready</span></td></tr>
+            <tr><td>Priya K</td><td>—</td><td>linkedin.com/in/priyak</td><td><span class="chip chip-warn">Missing email</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flex justify-end gap-2"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="toast('3 candidates imported');closeModal()">Import</button></div>
+    </div>
+  `;
+}
+
+function renderRescheduleModal() {
+  const { interviewId } = state.modal.data;
+  const i = INTERVIEWS.find(x => x.id === interviewId);
+  const j = jobById(i.jobId); const cfg = j.stageConfig[i.stageId];
+  const newSlots = findOverlappingSlots(cfg.panel, cfg.duration).slice(0, 5);
+
+  return `
+    <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+      <div>
+        <div class="font-semibold text-lg">Reschedule Interview</div>
+        <div class="text-sm text-[var(--text-2)]">${fmtDateTime(i.scheduledAt)} → new slot</div>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal()">${ICON.x}</button>
+    </div>
+    <div class="p-5">
+      <div class="mb-4">
+        <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-1">Reason (optional)</div>
+        <select class="select mb-2"><option>Candidate requested</option><option>Panelist conflict</option><option>Recruiter decision</option><option>Other</option></select>
+        <textarea class="textarea" placeholder="Free-text explanation…"></textarea>
+      </div>
+      <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">New available slots</div>
+      <div class="space-y-2 mb-5">
+        ${newSlots.slice(0,4).map((slot,idx) => `
+          <label class="slot-card flex items-center gap-3 ${idx===0?'selected':''}">
+            <input type="radio" name="new-slot" ${idx===0?'checked':''}/>
+            <div class="flex-1">
+              <div class="font-medium">${fmtDate(slot.start,{weekday:'long',month:'long',day:'numeric'})}</div>
+              <div class="text-sm text-[var(--text-2)]">${fmtTime(slot.start)} – ${fmtTime(slot.end)}</div>
+            </div>
+          </label>
+        `).join("")}
+      </div>
+      <div class="flex justify-end gap-2">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="toast('Reschedule confirmed. All parties notified.');closeModal()">Confirm Reschedule</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderBiasReviewModal() {
+  const { interviewId, panelId } = state.modal.data;
+  const i = INTERVIEWS.find(x => x.id === interviewId);
+  const f = i.feedback.find(x => x.panelId === panelId);
+  const p = panelById(panelId);
+  const c = candidateById(i.candidateId);
+
+  return `
+    <div class="p-5 border-b border-[var(--border)] flex items-center justify-between">
+      <div>
+        <div class="font-semibold text-lg">Bias Scan — private to recruiter</div>
+        <div class="text-sm text-[var(--text-2)]">${esc(p.name)}'s feedback on ${esc(c.name)}</div>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal()">${ICON.x}</button>
+    </div>
+    <div class="p-5">
+      <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Original feedback</div>
+      <div class="text-sm bg-[var(--surface)] p-3 rounded border border-[var(--border)] mb-4">${renderBiasHighlighted(f.freeText, f.biasFlags)}</div>
+
+      <div class="text-xs uppercase tracking-wide text-[var(--text-3)] mb-2">Flagged patterns</div>
+      <div class="space-y-2 mb-4">
+        ${f.biasFlags.map(flag => {
+          const category = Object.entries(BIAS_LEXICON).find(([, v]) => v.pattern.test(flag));
+          const catKey = category ? category[0] : "other";
+          const catData = category ? category[1] : { severity: "low", note: "" };
+          return `
+            <div class="card p-3">
+              <div class="flex items-start gap-2 mb-2">
+                <span class="chip ${catData.severity === 'high' ? 'chip-danger' : catData.severity === 'medium' ? 'chip-warn' : ''}">${esc(catKey)} · ${catData.severity}</span>
+                <span class="font-mono text-sm">"${esc(flag)}"</span>
+              </div>
+              <div class="text-sm text-[var(--text-2)]">${esc(catData.note)}</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+
+      <div class="banner banner-info mb-4">${ICON.sparkles}<div class="text-xs">This scan is part of Claude-powered bias detection. The panelist is not notified automatically — you decide whether to coach privately or dismiss.</div></div>
+
+      <div class="flex justify-end gap-2">
+        <button class="btn" onclick="closeModal()">Close</button>
+        <button class="btn" onclick="toast('Coaching note queued to ${esc(p.name)}');closeModal()">${ICON.mail}Send coaching note</button>
+        <button class="btn btn-primary" onclick="toast('Flagged for calibration discussion');closeModal()">Flag for calibration</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ==========================================================================
+   ACTIONS
+   ========================================================================== */
+function nav(view) {
+  state.view = view; state.currentJobId = null; state.currentCandidateId = null; state.currentInterviewId = null;
+  renderApp();
+}
+function openJob(id) { state.view = "job"; state.currentJobId = id; renderApp(); }
+function openCandidate(id) { state.view = "candidate"; state.currentCandidateId = id; renderApp(); }
+function openInterview(id) { state.view = "interview"; state.currentInterviewId = id; renderApp(); }
+function setRole(r) { state.role = r; state.view = "dashboard"; renderApp(); }
+
+function openScheduler(candidateId, stageId) {
+  state.schedulingState = { candidateId, stageId, step: 1, panelSlots: null };
+  state.modal = { type: "scheduler" };
+  renderApp();
+}
+function schedulerNext() {
+  const { candidateId, stageId } = state.schedulingState;
+  const c = candidateById(candidateId);
+  const j = jobById(c.jobId);
+  const cfg = j.stageConfig[stageId];
+  const slots = findOverlappingSlots(cfg.panel, cfg.duration);
+  state.schedulingState.step = 2;
+  state.schedulingState.panelSlots = slots;
+  renderApp();
+}
+function schedulerSend() {
+  state.schedulingState.step = 3;
+  renderApp();
+}
+
+function openBulkImport(jobId) { state.modal = { type: "bulk-import", data: { jobId } }; renderApp(); }
+function openReschedule(interviewId) { state.modal = { type: "reschedule", data: { interviewId } }; renderApp(); }
+function openBiasReview(interviewId, panelId) { state.modal = { type: "bias-review", data: { interviewId, panelId } }; renderApp(); }
+function openPanelInterview(interviewId) { state.modal = { type: "panel-interview", data: { interviewId } }; renderApp(); }
+function openFeedbackForm(interviewId) { state.modal = { type: "feedback-form", data: { interviewId, scores: {}, freeText: "", recommendation: null }, size: "modal-lg" }; renderApp(); }
+
+function setScore(k, n) { state.modal.data.scores[k] = n; renderApp(); }
+function setRec(v) { state.modal.data.recommendation = v; renderApp(); }
+
+function submitFeedback() {
+  const d = state.modal.data;
+  const txt = document.getElementById("fb-free")?.value || "";
+  const flags = runBiasScan(txt);
+  const flagWords = flags.flatMap(f => f.hits);
+  // Persist to INTERVIEWS
+  const iv = INTERVIEWS.find(i => i.id === d.interviewId);
+  iv.feedback.push({
+    panelId: PANELS[0].id,
+    submittedAt: new Date(),
+    scores: d.scores,
+    recommendation: d.recommendation,
+    freeText: txt,
+    biasFlags: flagWords,
+  });
+  closeModal();
+  if (flagWords.length > 0) {
+    toast(`Feedback submitted. AI flagged ${flagWords.length} language pattern(s) — visible to recruiter only.`);
+  } else {
+    toast("Feedback submitted. Thank you.");
+  }
+}
+
+function closeModal() { state.modal = null; state.schedulingState = null; renderApp(); }
+
+function toast(msg) {
+  const root = document.getElementById("toast-root");
+  root.innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  setTimeout(() => { if (root.innerHTML.includes(msg.slice(0,20))) root.innerHTML = ""; }, 3500);
+}
+
+/* ---------- INIT ---------- */
+renderApp();
+</script>
+</body>
+</html>
